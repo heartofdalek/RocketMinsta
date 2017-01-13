@@ -35,13 +35,18 @@ void W_SwitchWeapon_Force(entity e, float w)
     if(e.weapon) {
         using(self = e)
             weapon_action(self.weapon, WR_LOWER);
-    } else if(w)
+    } else if(w) {
         sound(e, CHAN_WEAPON2, "weapons/weapon_switch.wav", VOL_BASE, ATTN_NORM);
+    }
 
 	e.cnt = e.switchweapon;
 	e.switchweapon = w;
     e.w_inring_fulltime = 0;
     e.w_spread_indicator = -1;
+    e.w_spread_indicator2 = -1;
+
+    if((var g = Akimbo_Ghost(e)))
+        g.switchweapon = w;
 }
 
 void W_SwitchWeapon_OutOfAmmo(entity plr) {
@@ -56,11 +61,12 @@ void W_SwitchWeapon_OutOfAmmo(entity plr) {
 }
 
 // VorteX: static frame globals
-float WFRAME_DONTCHANGE = -1;
-float WFRAME_FIRE1 = 0;
-float WFRAME_FIRE2 = 1;
-float WFRAME_IDLE = 2;
-float WFRAME_RELOAD = 3;
+const WFRAME_DONTCHANGE = -1;
+const WFRAME_FIRE1 = 0;
+const WFRAME_FIRE2 = 1;
+const WFRAME_IDLE = 2;
+const WFRAME_RELOAD = 3;
+
 .float wframe;
 
 .vector shotorg_visual;
@@ -153,39 +159,19 @@ vector w_shotdir_visual;
 void W_SetupShot_Dir_ProjectileSize_HitMask(entity ent, vector s_forward, vector mi, vector ma, float antilag, float recoil, string snd, float maxdamage, float hitmask)
 {
 	float nudge = 1; // added to traceline target and subtracted from result
-	vector trueaimpoint;
 	float _oldsolid;
 	vector vecs, dv;
 
-	var oldmask = ent.dphitcontentsmask;
-    ent.dphitcontentsmask = hitmask;
-
-	if(antilag) {
-		traceline_antilag(world, ent.origin + ent.view_ofs, ent.origin + ent.view_ofs + s_forward * MAX_SHOT_DISTANCE, MOVE_NORMAL, ent);
-		// passing world, because we do NOT want it to touch dphitcontentsmask
-    } else {
-		WarpZone_TraceLine(ent.origin + ent.view_ofs, ent.origin + ent.view_ofs + s_forward * MAX_SHOT_DISTANCE, MOVE_NOMONSTERS, ent);
-    }
-
-	ent.dphitcontentsmask = hitmask | DPCONTENTS_SOLID | DPCONTENTS_BODY | DPCONTENTS_CORPSE;
-
-	vector vf, vr, vu;
-	vf = v_forward;
-	vr = v_right;
-	vu = v_up;
-	trueaimpoint = WarpZone_UnTransformOrigin(WarpZone_trace_transform, trace_endpos); // warpzone support
-	v_forward = vf;
-	v_right = vr;
-	v_up = vu;
-
+    entity ent_orig = ent;
+    ent = Akimbo_Owner(ent);
 
     if(maxdamage > 0)
         W_Accuracy_RegisterPotentialDamage(ent, ent.weapon, maxdamage);
 	W_HitPlotAnalysis(ent, v_forward, v_right, v_up);
 
-	if(ent.weaponentity.movedir_x > 0)
+	if(ent_orig.weaponentity.movedir_x > 0)
 	{
-		vecs = ent.weaponentity.movedir;
+		vecs = ent_orig.weaponentity.movedir;
 		vecs_y = -vecs_y;
 	}
 	else
@@ -203,8 +189,37 @@ void W_SetupShot_Dir_ProjectileSize_HitMask(entity ent, vector s_forward, vector
 	else
 		tracebox(w_shotorg, mi, ma, w_shotorg + v_forward * (vecs_x + nudge), MOVE_NORMAL, ent);
 	w_shotorg = trace_endpos - v_forward * nudge;
-	// calculate the shotdir from the chosen shotorg
-	w_shotdir = normalize(trueaimpoint - w_shotorg);
+
+	if (Akimbo_Active(ent))
+		w_shotdir = s_forward;
+	else
+	{
+		vector trueaimpoint;
+		var oldmask = ent.dphitcontentsmask;
+		ent.dphitcontentsmask = hitmask;
+
+		if(antilag) {
+			traceline_antilag(world, ent.origin + ent.view_ofs, ent.origin + ent.view_ofs + s_forward * MAX_SHOT_DISTANCE, MOVE_NORMAL, ent);
+			// passing world, because we do NOT want it to touch dphitcontentsmask
+		} else {
+			WarpZone_TraceLine(ent.origin + ent.view_ofs, ent.origin + ent.view_ofs + s_forward * MAX_SHOT_DISTANCE, MOVE_NOMONSTERS, ent);
+		}
+
+		ent.dphitcontentsmask = hitmask | DPCONTENTS_SOLID | DPCONTENTS_BODY | DPCONTENTS_CORPSE;
+
+		//Prevent modification by warp functions
+		vector vf, vr, vu;
+		vf = v_forward;
+		vr = v_right;
+		vu = v_up;
+		trueaimpoint = WarpZone_UnTransformOrigin(WarpZone_trace_transform, trace_endpos); // warpzone support
+		v_forward = vf;
+		v_right = vr;
+		v_up = vu;
+		// calculate the shotdir from the chosen shotorg
+		w_shotdir = normalize(trueaimpoint - w_shotorg);
+		ent.dphitcontentsmask = oldmask;
+	}
 
 	if (antilag)
 	{
@@ -247,12 +262,10 @@ void W_SetupShot_Dir_ProjectileSize_HitMask(entity ent, vector s_forward, vector
 		}
 	}
 
-	ent.dphitcontentsmask = oldmask;
-
 	if (!g_norecoil)
 		ent.punchangle_x = recoil * -1;
 
-    ent.weaponentity.punchangle_x = recoil;
+    ent_orig.weaponentity.punchangle_x = recoil;
 
 	if (snd != "")
 	{
@@ -279,7 +292,7 @@ void W_SetHitscanVisuals(entity p, vector end) {
         vecs_y = -vecs_y;
 
         dv = v_right * vecs_y + v_up * vecs_z;
-        w_shotorg_visual = p.origin + p.view_ofs + dv;
+        w_shotorg_visual = Akimbo_Owner(p).origin + Akimbo_Owner(p).view_ofs + dv;
         w_shotdir_visual = normalize(end - w_shotorg_visual);
     }
 }
@@ -354,14 +367,16 @@ void LaserTarget_Think()
 
 float CL_Weaponentity_CustomizeEntityForClient()
 {
-    if(self.owner != self.owner.clientcamera)
+    var o = Akimbo_Owner(self.owner);
+
+    if(o != o.clientcamera)
         return FALSE;
 
-	self.viewmodelforclient = self.owner;
-    if(other.clientcamera == self.owner)
+	self.viewmodelforclient = o;
+    if(other.clientcamera == self.viewmodelforclient)
 		self.viewmodelforclient = other;
 
-    self.alpha = Client_CalculateAlpha(self.owner, world);
+    self.alpha = Client_CalculateAlpha(o, world);
 	return (self.alpha > 0);
 }
 
@@ -449,17 +464,26 @@ void CL_Weaponentity_Think()
 			animfilename = pickfile("models/weapons/h_" + self.owner.weaponname, "iqm.animinfo", "dpm.animinfo", NULL);
 			animfile = fopen(animfilename, FILE_READ);
 			// preset some defaults that work great for renamed zym files (which don't need an animinfo)
-			self.anim_fire1  = '0 1 0.01';
-			self.anim_fire2  = '1 1 0.01';
-			self.anim_idle   = '2 1 0.01';
-			self.anim_reload = '3 1 0.01';
+			self.anim_fire1       = '0 1 0.01';
+			self.anim_fire2       = '1 1 0.01';
+			self.anim_idle        = '2 1 0.01';
+			self.anim_reload      = '3 1 0.01';
+            self.anim_fire1_left  = '4 1 0.01';
+            self.anim_fire2_left  = '5 1 0.01';
+            self.anim_idle_left   = '6 1 0.01';
+            self.anim_reload_left = '7 1 0.01';
+
 			if (animfile >= 0)
 			{
 				animparseerror = FALSE;
-				self.anim_fire1  = animparseline(animfile);
-				self.anim_fire2  = animparseline(animfile);
-				self.anim_idle   = animparseline(animfile);
-				self.anim_reload = animparseline(animfile);
+				self.anim_fire1       = animparseline(animfile);
+				self.anim_fire2       = animparseline(animfile);
+				self.anim_idle        = animparseline(animfile);
+				self.anim_reload      = animparseline(animfile);
+                self.anim_fire1_left  = animparseline(animfile);
+                self.anim_fire2_left  = animparseline(animfile);
+                self.anim_idle_left   = animparseline(animfile);
+                self.anim_reload_left = animparseline(animfile);
 				fclose(animfile);
 				if (animparseerror)
 					print("Parse error in ", animfilename, ", some player animations are broken\n");
@@ -530,7 +554,7 @@ void CL_Weaponentity_Think()
 				}
 			}
 
-			self.viewmodelforclient = self.owner;
+			self.viewmodelforclient = Akimbo_Owner(self.owner);
 		}
 		else
 		{
@@ -554,8 +578,9 @@ void CL_Weaponentity_Think()
 		{
 			vector v0;
 			v0 = self.movedir;
-			self.movedir = shotorg_adjust(v0, FALSE, FALSE);
-            self.shotorg_visual = shotorg_adjust(v0, FALSE, TRUE);
+            float akimbo_active = Akimbo_Active(self.owner);
+			self.movedir = shotorg_adjust(v0, FALSE, FALSE, akimbo_active);
+            self.shotorg_visual = shotorg_adjust(v0, FALSE, TRUE, akimbo_active);
 			self.view_ofs = self.shotorg_visual - v0;
 		}
 
@@ -565,8 +590,10 @@ void CL_Weaponentity_Think()
 
 		self.spawnorigin += self.view_ofs; // offset the casings origin by the same amount
 
+        var gunpos = Akimbo_GunPosition(self.owner);
+
         var ofs = stov(cvar_string("sv_weaponmodel_" + get_weaponinfo(self.owner.weapon).netname + "_offset"));
-        ofs_y *= switch(self.owner.gunswitchmode) {
+        ofs_y *= switch(gunpos) {
             case 1: -1,
             case 2:  1,
             default: 0
@@ -576,7 +603,9 @@ void CL_Weaponentity_Think()
 
 		// reset animstate now
 		self.wframe = WFRAME_IDLE;
-		setanim(self, self.anim_idle, TRUE, FALSE, TRUE);
+		setanim(self, self.(if(gunpos == 2 &&
+				cvar("sv_weaponmodel_" + get_weaponinfo(self.owner.weapon).netname + "_left_hand_animations"))
+				anim_idle_left else anim_idle), TRUE, FALSE, TRUE);
 	}
 
 	tb = (self.effects & EF_TELEPORT_BIT);
@@ -600,28 +629,34 @@ void CL_Weaponentity_Think()
 	}
 
 	self.angles = '0 0 0';
+
+    var switchmode = Akimbo_GunPosition(self.owner);
+
 	float f;
 	f = 0;
+	vector left_hand_correction = '0 0 0';
 	if (self.state == WS_RAISE && !intermission_running)
 	{
 		f = (self.owner.weapon_nextthink - time) * g_weaponratefactor / CVAR(g_balance_weaponswitchdelay);
 
-        if(self.owner.gunswitchmode == 1)
+        if(switchmode == 1)
             self.angles_y = -90 * f * f;
-        else if(self.owner.gunswitchmode == 2)
+        else if(switchmode == 2) {
+			left_hand_correction_x = -20 * f;
             self.angles_y = 90 * f * f;
-        else
+        } else
             self.angles_x = -90 * f * f;
 	}
 	else if (self.state == WS_DROP && !intermission_running)
 	{
 		f = 1 - (self.owner.weapon_nextthink - time) * g_weaponratefactor / CVAR(g_balance_weaponswitchdelay);
 
-        if(self.owner.gunswitchmode == 1)
+        if(switchmode == 1)
             self.angles_y = -90 * f * f;
-        else if(self.owner.gunswitchmode == 2)
+        else if(switchmode == 2) {
+			left_hand_correction_x = -20 * f;
             self.angles_y = 90 * f * f;
-        else
+        } else
             self.angles_x = -90 * f * f;
 	}
 	else if (self.state == WS_CLEAR)
@@ -631,14 +666,14 @@ void CL_Weaponentity_Think()
         self.angles_x = -90 * f * f;
 	}
 
-    if(self.owner.gunswitchmode == 1)
+    if(switchmode == 1)
         self.punchangle_y = self.punchangle_x * -0.25;
-    else if(self.owner.gunswitchmode == 2)
+    else if(switchmode == 2)
         self.punchangle_y = self.punchangle_x *  0.25;
 
     self.angles += self.punchangle;
     self.punchangle = self.punchangle * max(0, 1 - frametime * 5);
-    setorigin(self, self.w_viewmodel_offset + self.punchangle_x * '-2 0 -1');
+    setorigin(self, self.w_viewmodel_offset + self.punchangle_x * '-2 0 -1' + left_hand_correction);
 
 	// create or update the lasertarget entity
 	LaserTarget_Think();
@@ -674,17 +709,29 @@ void CL_ExteriorWeaponentity_Think()
 			self.model = "";
         }
 
-		if((tag_found = gettagindex(self.owner, "tag_weapon")))
+		float akimbo_weapon = (Akimbo_Active(self.owner) == 2);
+		if((tag_found = gettagindex(Akimbo_Owner(self.owner), "tag_weapon")))
 		{
 			self.tag_index = tag_found;
 			self.tag_entity = self.owner;
 		}
-		else
-			setattachment(self, self.owner, "bip01 r hand");
+		else if (akimbo_weapon && CVAR(g_akimbo_use_left_hand)) {
+			setattachment(self, Akimbo_Owner(self.owner), "bip01 l hand");
+			string per_weapon_angles = cvar_string("g_akimbo_use_left_hand_rotate_" + get_weaponinfo(self.owner.weapon).netname);
+			if (per_weapon_angles == "")
+				self.angles = CVAR_VEC(g_akimbo_use_left_hand_rotate);
+			else
+				self.angles = stov(per_weapon_angles);
+		} else {
+			setattachment(self, Akimbo_Owner(self.owner), "bip01 r hand");
+			if (akimbo_weapon)
+				setorigin(self, '0 20 0');
+		}
 
 		// if that didn't find a tag, hide the exterior weapon model
 		if (!self.tag_index)
 			self.model = "";
+
 	}
 	self.effects = self.owner.effects | EF_LOWPRECISION;
 	self.effects = self.effects & EFMASK_CHEAP; // eat performance
@@ -706,7 +753,7 @@ void CL_SpawnWeaponentity()
 	setmodel(self.weaponentity, ""); // precision set when changed
 	setorigin(self.weaponentity, '0 0 0');
 	self.weaponentity.angles = '0 0 0';
-	self.weaponentity.viewmodelforclient = self;
+	self.weaponentity.viewmodelforclient = Akimbo_Owner(self);
 	self.weaponentity.flags = 0;
 	self.weaponentity.think = CL_Weaponentity_Think;
 	self.weaponentity.customizeentityforclient = CL_Weaponentity_CustomizeEntityForClient;
@@ -814,6 +861,9 @@ float client_hasweapon(entity cl, float wpn, float andammo, float complain) {
 // Weapon subs
 void w_clear()
 {
+    if(Akimbo_Active(self) == 2)
+        self.weapon = -1;
+
 	if (self.weapon != -1)
 		self.weapon = 0;
 	if (self.weaponentity)
@@ -858,7 +908,8 @@ float weapon_prepareattack(float secondary, float attacktime)
 
     if not(self.items & IT_UNLIMITED_WEAPON_AMMO)
     if(!weapon_action(self.weapon, WR_CHECKAMMO1 + secondary)) {
-        W_SwitchWeapon_OutOfAmmo(self);
+        if (Akimbo_Active(self) < 2)
+            W_SwitchWeapon_OutOfAmmo(self);
         return FALSE;
     }
 
@@ -917,15 +968,21 @@ void weapon_thinkf(float fr, float t, void() func)
 	{
 		self.weaponentity.wframe = fr;
 
+        var lefthand = (
+            Akimbo_GunPosition(self) == 2 &&
+            cvar("sv_weaponmodel_" + get_weaponinfo(self.weapon).netname + "_left_hand_animations")
+        );
+
 		if (fr == WFRAME_IDLE)
-			a = self.weaponentity.anim_idle;
+			a = self.weaponentity.(if(lefthand) anim_idle_left else anim_idle);
 		else if (fr == WFRAME_FIRE1)
-			a = self.weaponentity.anim_fire1;
+			a = self.weaponentity.(if(lefthand) anim_fire1_left else anim_fire1);
 		else if (fr == WFRAME_FIRE2)
-			a = self.weaponentity.anim_fire2;
+			a = self.weaponentity.(if(lefthand) anim_fire2_left else anim_fire2);
 		else if (fr == WFRAME_RELOAD) {
-			a = self.weaponentity.anim_reload;
+			a = self.weaponentity.(if(lefthand) anim_reload_left else anim_reload);
         }
+
 		a_z *= g_weaponratefactor;
 		setanim(self.weaponentity, a, restartanim == FALSE, restartanim, restartanim);
 	}
@@ -962,7 +1019,7 @@ void weapon_thinkf(float fr, float t, void() func)
 	{
 		vector anim;
 		if (self.weapon == WEP_PRYAXE)
-			anim = self.anim_pain1; // we dont have standart melee animation...
+			anim = self.anim_melee; // we dont have standart melee animation...
 		else
 			anim = self.anim_shoot;
 		anim_z = anim_y / t;
@@ -1076,7 +1133,7 @@ void W_AttachToShotorg(entity flash, vector offset)
 	xflash = spawn();
 	copyentity(flash, xflash);
 
-	flash.viewmodelforclient = self;
+	flash.viewmodelforclient = Akimbo_Owner(self);
 
 	if(self.weaponentity.oldorigin_x > 0)
 	{
@@ -1096,6 +1153,8 @@ float in_setbuttonfields;
 void W_SetButtonFields(entity plr, float swap) {
     if(in_setbuttonfields)
         return;
+
+    plr = Akimbo_Owner(plr);
 
     if(plr.clientcamera != plr) {
         w_button_primary = w_button_secondary = w_button_null;

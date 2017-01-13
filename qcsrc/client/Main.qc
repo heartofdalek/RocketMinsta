@@ -802,9 +802,12 @@ void PostInit(void)
             warpzone_sound_transition = 0;
         case 64:
             cvar_set("sv_ip2country_server", "udp://91.121.161.160:16886");
+        case 65:
+            localcmd("seta r_transparentdepthmasking 1\n");
+            localcmd("seta scr_loadingscreen_background 1\n");
 
 		//More to come here with each update
-		localcmd("seta rm_initialized 65\n");
+		localcmd("seta rm_initialized 66\n");
 		RM_OUTDATED
 		break;
 	}
@@ -1075,7 +1078,13 @@ float CSQC_ConsoleCommand(string strMessage)
 		rm_visualscore = CVAR(rm_visualscore);
 		rm_oldhud_option = CVAR(rm_oldhud);
 		rm_althud_option = CVAR(rm_althud);
+
+#ifdef RM_SUPPORT_PKG_o_flagicons
 		rm_noflags = CVAR(rm_noflags);
+#else
+        rm_noflags = 0;
+#endif
+
 		rm_showrankings = CVAR(rm_showrankings);
 		rm_shownames_teamonly = CVAR(rm_shownames_teamonly);
 		rm_oldbigfont = CVAR(rm_oldbigfont);
@@ -2107,6 +2116,7 @@ void Ent_Init()
 	g_nadgets = ReadByte();
     cvar_set("_g_nadgets_select_available", ftos(if(g_nadgets) ReadByte() else 0));
     cvar_set("_g_nadgets_select_double", ftos(g_nadgets_double = if(g_nadgets) ReadByte() else 0));
+    g_weaponarena = ReadInt24_t();
     g_weaponarena_secondary = ReadInt24_t();
     cvar_set("_secondary_select_available", ftos(!!(g_weaponarena_secondary & (g_weaponarena_secondary - 1))));
     g_freeze = ReadByte();

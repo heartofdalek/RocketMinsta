@@ -233,9 +233,6 @@ float w_campingrifle(float req)
 	else if (req == WR_RESETPLAYER)
 	{
 		self.campingrifle_accumulator = time - CVAR(g_balance_campingrifle_bursttime);
-        self.weaponentity.state = WS_READY;
-        self.weapon_think = w_ready;
-        self.weapon_nextthink = time;
 	}
 
     W_Clip_WeaponRequestHook(req);

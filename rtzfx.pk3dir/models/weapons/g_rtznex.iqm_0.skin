@@ -1,0 +1,12 @@
+rtznex,textures/rtznex
+glow3,textures/glow3
+fx_1,textures/fx_1
+fx_2,textures/fx_2
+fx_3,textures/fx_3
+screen_a,textures/rtznex_screen
+core,textures/rtzapper_core
+ring,textures/rtzapper_ringfx
+plane_glow,textures/rtzapper_innerglow
+glow,textures/rtznexglow
+glow2,textures/rtznexglow
+screen_overlay,textures/rm_nex_scope_overlay_anim

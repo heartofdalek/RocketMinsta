@@ -31,11 +31,13 @@ void W_Zapper_SpawnSpinner(void) {
     if(self.zapper_spinner)
         return;
 
+    var o = Akimbo_Owner(self);
+
     var s = spawn() {
         classname: "zapper_spinner",
         model: "models/weapons/rtzapper_hyperhonker.iqm",
         owner: self,
-        viewmodelforclient: self,
+        viewmodelforclient: o,
         colormap: self.colormap,
         color: W_Zapper_BeamRGB(if(teams_matter) self.team else COLOR_TEAM2),
         think: inline void(void) {
@@ -64,10 +66,16 @@ void W_Zapper_SpawnSpinner(void) {
             self.nextthink = time;
         },
         nextthink: time,
-        customizeentityforclient: CL_Weaponentity_CustomizeEntityForClient,
+        customizeentityforclient: CL_Weaponentity_CustomizeEntityForClient
     };
 
     setattachment(s, self.weaponentity, "shot");
+
+    if(!s.tag_index) {
+        // Akimbo FIXME: why does this happen?
+        s.tag_index = o.zapper_spinner.tag_index;
+    }
+
     setorigin(s, '-4 0 -0.5');
     setmodel(s, s.model);
 
@@ -87,13 +95,13 @@ float W_Zapper_Attack2_CheckAmmo(entity p) {
 vector W_Zapper_LocalShotOrg(entity p) {
     entity o = self.owner;
     self.owner = p;
-    vector v = shotorg_adjust('30 10 -18', TRUE, TRUE);
+    vector v = shotorg_adjust('30 10 -18', TRUE, TRUE, Akimbo_Active(p));
     self.owner = o;
     return v;
 }
 
 float W_Zapper_Beam_Send(entity to, float sf) {
-    sf &~= 8 | 16 | 32;
+    sf &~= 8 | 16 | 32 | 128;
 
     if(self.sounds < 0)
         sf |= 16;
@@ -103,8 +111,12 @@ float W_Zapper_Beam_Send(entity to, float sf) {
     if(o > maxclients)
         o = 0;
 
-    if(!o)
+    if(o) {
+        if(self.owner != self.enemy) // akimbo secondary
+            sf |= 128; // invert shotorg y
+    } else {
         sf |= 32;
+    }
 
     if(self.classname == "zapper_shield_beam")
         WriteByte(MSG_ENTITY, ENT_CLIENT_ZAPPER_SHIELD);
@@ -142,27 +154,29 @@ float W_Zapper_Beam_Send(entity to, float sf) {
 }
 
 float W_Zapper_Beam_Expired(float secondary) {
-    W_SetButtonFields(self.owner, CVAR(g_balance_zapper_swapshotmodes));
+    var o = Akimbo_Owner(self.owner);
 
-    if(time > self.zapper_expire && ((secondary && !self.owner.w_button_secondary) || (!secondary && !self.owner.w_button_primary)))
+    W_SetButtonFields(o, CVAR(g_balance_zapper_swapshotmodes));
+
+    if(time > self.zapper_expire && ((secondary && !o.w_button_secondary) || (!secondary && !o.w_button_primary)))
         return TRUE;
 
     if(self.owner.zapper_heat >= 1)
         return TRUE;
 
-    if(self.owner.weapon != WEP_ZAPPER)
+    if(o.weapon != WEP_ZAPPER)
         return TRUE;
 
-    if(!PlayerMayFire(self.owner))
+    if(!PlayerMayFire(o))
         return TRUE;
 
     if(secondary) {
-        if(self.owner.ammo_cells < 1)
+        if(o.ammo_cells < 1)
             return TRUE;
     } else {
-        if(!W_Zapper_Attack1_CheckAmmo(self.owner))
+        if(!W_Zapper_Attack1_CheckAmmo(o))
             return TRUE;
-        if(self.owner.zapper_shield)
+        if(o.zapper_shield)
             return TRUE;
     }
 
@@ -171,14 +185,14 @@ float W_Zapper_Beam_Expired(float secondary) {
 
 void W_Zapper_Beam_Think(void) {
     if(W_Zapper_Beam_Expired(FALSE)) {
-        if(self.owner.zapper_beam == self)
-            self.owner.zapper_beam = world;
+        if(self.enemy.zapper_beam == self)
+            self.enemy.zapper_beam = world;
         remove(self);
         return;
     }
 
     makevectors(self.owner.v_angle);
-    W_SetupShot(self.owner, FALSE, 0, "", -1);
+    W_SetupShot(self.enemy, FALSE, 0, "", -1);
 
     float fract;
     entity targ;
@@ -255,10 +269,10 @@ void W_Zapper_Beam_Think(void) {
         self.zapper_lastdmg += wantedTicrate;
     }
 
-    vector org = gettaginfo(self.owner.exteriorweaponentity, gettagindex(self.owner.exteriorweaponentity, "_"));
+    vector org = gettaginfo(self.enemy.exteriorweaponentity, gettagindex(self.enemy.exteriorweaponentity, "_"));
 
     if(org)
-        org = org + v_forward * self.owner.exteriorweaponentity.maxs_x * 0.66 + v_up * self.owner.exteriorweaponentity.maxs_z * 0.4;
+        org = org + v_forward * self.enemy.exteriorweaponentity.maxs_x * 0.66 + v_up * self.enemy.exteriorweaponentity.maxs_z * 0.4;
     else
         org = w_shotorg;
 
@@ -274,12 +288,13 @@ void W_Zapper_Beam_Think(void) {
         self.zapper_beam_end = nowarp_end;
     }
 
-    if(self.owner.zapper_heat >= 0) {
-        self.owner.zapper_heat = bound(0, self.owner.zapper_heat + (CVAR(g_balance_zapper_primary_heatup) * frametime) / rate, 1);
-        self.owner.zapper_coolofftime = time + frametime;
+    if(self.enemy.zapper_heat >= 0) {
+        self.enemy.zapper_heat = bound(0, self.enemy.zapper_heat + (CVAR(g_balance_zapper_primary_heatup) * frametime) / rate, 1);
+        self.enemy.zapper_coolofftime = time + frametime;
     }
 
-    ATTACK_FINISHED(self.owner) = time + CVAR(g_balance_zapper_primary_refire) * rate;
+    if(self.enemy.weapon)
+        ATTACK_FINISHED(self.enemy) = time + CVAR(g_balance_zapper_primary_refire) * rate;
 
     self.nextthink = time;
 }
@@ -293,7 +308,8 @@ void W_Zapper_Attack1(void) {
     var e = spawn();
     e.classname = "zapper_beam";
     e.think = W_Zapper_Beam_Think;
-    e.owner = self;
+    e.owner = Akimbo_Owner(self);
+    e.enemy = self;
 
     e.zapper_tracespeed = CVAR(g_balance_zapper_primary_tracespeed);
     e.zapper_range = CVAR(g_balance_zapper_primary_range);
@@ -345,7 +361,7 @@ void W_Zapper_Attack2(void) {
         if (!charge_time)
             charge_time = accum_time;
     }
-	
+
     float accum  = if(accum_time) min(1, (time - self.zapper_accumulate) * W_WeaponRateFactorFor(self.owner) / charge_time) else 1;
     float damage = CVAR(g_balance_zapper_secondary_damage) * accum;
     float force  = CVAR(g_balance_zapper_secondary_force) * accum;
@@ -398,7 +414,6 @@ void W_Zapper_Attack2(void) {
 
     if not(self.items & IT_UNLIMITED_WEAPON_AMMO)
         self.ammo_cells = self.ammo_cells - CVAR(g_balance_zapper_secondary_ammo);
-
 }
 
 void W_Zapper_Shield_Beam_Think(void) {
@@ -619,7 +634,7 @@ void W_Zapper_Attack3(void) {
     b.classname = "zapper_shield_beam";
     b.think = W_Zapper_Shield_Beam_Think;
     b.nextthink = time;
-    b.owner = self;
+    b.owner = Akimbo_Owner(self);
 
     Net_LinkEntity(b, FALSE, 0, W_Zapper_Beam_Send);
 
@@ -627,7 +642,7 @@ void W_Zapper_Attack3(void) {
 
     b = spawn();
     b.classname = "zapper_shield_blocker";
-    b.owner = self;
+    b.owner = Akimbo_Owner(self);
     b.think = W_Zapper_Shield_Blocker_Think;
     b.zapper_shield = e;
     b.nextthink = time;
@@ -648,6 +663,10 @@ void W_Zapper_Cooloff(void) {
         return;
 
     self.zapper_heat = bound(0, self.zapper_heat - CVAR(g_balance_zapper_primary_cooloff) * frametime * a, 1);
+
+    if(Akimbo_Active(self) == 1)
+        using(self = Akimbo_Ghost(self))
+            W_Zapper_Cooloff();
 }
 
 float W_Zapper_PrepareFirstAttack(float sec) {
@@ -777,6 +796,16 @@ float w_zapper(float req) {
             self.zapper_heat = -1;
     } else if(req == WR_SETUP) {
         weapon_setup(WEP_ZAPPER);
+    } else if(req == WR_CLEAR) {
+        if(self.zapper_spinner) {
+            remove(self.zapper_spinner);
+            self.zapper_spinner = world;
+        }
+
+        if(self.zapper_beam) {
+            remove(self.zapper_beam);
+            self.zapper_beam = world;
+        }
     } else if(req == WR_CHECKAMMO1)
         return W_Zapper_Attack1_CheckAmmo(self);
     else if(req == WR_CHECKAMMO2)

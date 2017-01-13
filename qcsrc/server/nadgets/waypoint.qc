@@ -7,18 +7,30 @@ enum {
 };
 
 void HG_Waypoint_Update(string wpname) {
-    if(!self.hg_waypoint) {
-        float ownerhack = (self.hg_type == HG_BAIT || self.hg_type == HG_SENTRY);
+    var hgname = HG_TypeToName(self.hg_type);
 
-        WaypointSprite_Spawn(wpname, 0, 0, self, '0 0 32' * (1 + 1 * ownerhack + 1 * (self.hg_type == HG_SENTRY)), (if(ownerhack) self.realowner else self.owner), 0, self, hg_waypoint, 1);
+    if(fexists(pickfile("models/sprites/pointers/" + hgname + "_" + wpname, "tga", "jpg", "png", NULL)))
+        wpname = hgname + "_" + wpname;
+
+    wpname = "pointers/" + wpname;
+
+    if(!self.hg_waypoint) {
+        var ownerhack = (self.hg_type == HG_BAIT || self.hg_type == HG_SENTRY);
+        var teamwp = (teams_matter && GRENVAR(self.hg_type, if(self.hg_adept) "adept_detect_enemies_teamwide" else "detect_enemies_teamwide"));
+        var o = if(ownerhack) self.realowner else self.owner;
+        var t = if(teamwp) o.team else 0;
+        o = if(teamwp) world else o;
+
+        WaypointSprite_Spawn(wpname, 0, 0, self, '0 0 32' * (1 + 1 * ownerhack + 1.5 * (self.hg_type == HG_SENTRY)),
+            o, t, self, hg_waypoint, 1);
 
         if(self.hg_type == HG_SENTRY) {
             WaypointSprite_UpdateMaxHealth(self.hg_waypoint, (self.hg_wp_state == WPCOLOR_RED));
             WaypointSprite_UpdateTeamRadar(self.hg_waypoint, 0, '1 0.5 0');
-        } else if(self.hg_detonateready > time) {
+        } else if(self.hg_detonable && self.hg_detonateready > time) {
             WaypointSprite_UpdateTeamRadar(self.hg_waypoint, 0, '0 1 1');
             WaypointSprite_UpdateBuildFinished(self.hg_waypoint, self.hg_detonateready);
-        } else if(self.hg_type == HG_TRANSLOC || self.hg_type == HG_BAIT) {
+        } else {
             WaypointSprite_UpdateTeamRadar(self.hg_waypoint, 0, '0 1 1');
             WaypointSprite_UpdateBuildFinished(self.hg_waypoint, self.hg_deathtime);
         }
@@ -39,9 +51,9 @@ void HG_Waypoint_SetColor(float wpcolor) {
     if(self.hg_wp_state != wpcolor) {
         self.hg_wp_state = wpcolor;
         HG_Waypoint_Update(switch(wpcolor) {
-            case WPCOLOR_RED:       "pointer_red",
-            case WPCOLOR_ORANGE:    "pointer_orange",
-            case WPCOLOR_CYAN:      "pointer_cyan",
+            case WPCOLOR_RED:       "red",
+            case WPCOLOR_ORANGE:    "orange",
+            case WPCOLOR_CYAN:      "cyan",
             default:                NULL
         });
     }
@@ -76,16 +88,24 @@ void HG_Waypoint(void) {
             return;
         }
 
-        if(rng > 0) FOR_EACH_PLAYER(plr) {
-            if(plr.team != self.team || !teams_matter)
-            if(plr != self.owner)
-            if(!PlayerIsDead(plr))
-            if(vlen(self.origin - plr.origin) < rng)
-            if(checkpvs(self.origin, plr)) {
-                detected = TRUE;
-                break;
+        if(rng > 0) {
+            FOR_EACH_PLAYER(plr) {
+                if(plr.team != self.team || !teams_matter)
+                if(plr != self.owner)
+                if(!PlayerIsDead(plr))
+                if(vlen(self.origin - plr.origin) < rng)
+                if(checkpvs(self.origin, plr)) {
+                    detected = TRUE;
+                    break;
+                }
             }
+        } else {
+            warn = (time > self.hg_deathtime - 1);
+            detected = (time > self.hg_deathtime - 0.5);
         }
+
+        if(self.hg_detonatetime)
+            warn = TRUE;
     }
 
     if(!self.hg_waypoint)

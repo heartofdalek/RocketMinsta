@@ -350,7 +350,7 @@ void W_Crylink_Attack(void)
     {
         proj = spawn();
         proj.reset = W_Crylink_Reset;
-        proj.realowner = proj.owner = self;
+        proj.realowner = proj.owner = Akimbo_Owner(self);
         proj.classname = "spike";
         proj.bot_dodge = TRUE;
         proj.bot_dodgerating = WEP_CVAR_PRI(crylink, damage);
@@ -464,7 +464,7 @@ void W_Crylink_Attack2(void)
     {
         proj = spawn();
         proj.reset = W_Crylink_Reset;
-        proj.realowner = proj.owner = self;
+        proj.realowner = proj.owner = Akimbo_Owner(self);
         proj.classname = "spike";
         proj.bot_dodge = TRUE;
         proj.bot_dodgerating = WEP_CVAR_SEC(crylink, damage);
@@ -618,7 +618,7 @@ float w_crylink(float req)
                     linkjoineffect.think = W_Crylink_LinkJoinEffect_Think;
                     linkjoineffect.classname = "linkjoineffect";
                     linkjoineffect.nextthink = time + w_crylink_linkjoin_time;
-                    linkjoineffect.owner = self;
+                    linkjoineffect.owner = Akimbo_Owner(self);
                     setorigin(linkjoineffect, pos);
 
                     sound(linkjoineffect, CHAN_PROJECTILE, "weapons/rm_laser2.wav", VOL_BASE, ATTN_NORM);

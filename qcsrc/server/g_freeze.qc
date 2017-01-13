@@ -246,6 +246,7 @@ void Freeze_SaveSpawnState(entity plr) {
     plr.spawnstate_team = plr.team;
     plr.spawnstate_origin = plr.origin;
     plr.spawnstate_angles = plr.angles;
+    plr.spawnstate_w_secondary = plr.w_secondary;
 }
 
 void Freeze_RestoreSpawnState(entity plr) {
@@ -255,7 +256,9 @@ void Freeze_RestoreSpawnState(entity plr) {
         plr.fixangle = 1;
         setorigin(plr, plr.spawnstate_origin + '0 0 1' * (1 - plr.mins_z - 24));
     }
-    
+
+    W_SetSecondary(plr, plr.spawnstate_w_secondary);
+
     plr.spawnstate_saved = FALSE;
 }
 
@@ -273,8 +276,9 @@ void Freeze_RespawnPlayer(entity p) {
         
     if(!sp) {
         bprint("Coudln't select a spawn point for ", p.netname, "^7!\n");
-    } else
+    } else {
         TeleportPlayer(p, p, sp.origin, sp.angles, '0 0 0', '0 0 0', '0 0 0');
+    }
 }
 
 .float triggerhurttime;
@@ -286,6 +290,8 @@ float Freeze_Hook_PlayerDies(entity attacker, vector frce, float deathtype) {
 
     if(roundstate != ROUNDSTATE_GAME)
         return 0;
+
+    self.spawnstate_w_secondary = self.w_secondary;
 
     if(self.frozen) {
         if(self.iceblock) {

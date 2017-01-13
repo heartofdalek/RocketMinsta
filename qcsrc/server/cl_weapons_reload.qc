@@ -60,6 +60,14 @@ void W_Clip_Stats_Update(void) {
         self.w_clip_loaded_stat = self.w_clip_loaded_array[wep];
         self.w_clip_limit_stat = self.w_clip_limit_array[wep];
     }
+
+    if(Akimbo_Active(self) == 1) {
+        var g = Akimbo_Ghost(self);
+        using(self = g)
+            W_Clip_Stats_Update();
+        self.w_clip_loaded_stat += g.w_clip_loaded_stat;
+        self.w_clip_limit_stat += g.w_clip_limit_stat;
+    }
 }
 
 float W_Clip_CheckFull(void) {
@@ -174,7 +182,7 @@ void W_Clip_Reset(float dorefill) {
     if(w_clip_context_limit <= 0)
         return;
 
-    self.w_clip_limit = rint(w_clip_context_limit * Buffs_ClipLimitMultiplier(self));
+    self.w_clip_limit = rint(w_clip_context_limit * Buffs_ClipLimitMultiplier(Akimbo_Owner(self)));
 
     if(dorefill) {
         self.w_clip_loaded = self.w_clip_limit;
@@ -190,6 +198,11 @@ void W_Clip_Reset(float dorefill) {
 void W_Clip_ResetAll(float dorefill) {
     var wep;
     W_CLIP_LOOP_FOR_ALL_CONTEXTS(wep, W_Clip_Reset(dorefill);)
+
+    if(self.classname != "akimbo_ghost")
+        using(self = Akimbo_PGhost(self))
+            if(self)
+                W_Clip_ResetAll(dorefill);
 }
 
 float W_Clip_Consume(float cost) {
@@ -259,4 +272,9 @@ void W_Clip_PlayerPreThinkHook(void) {
     W_CLIP_LOOP_FOR_ALL_CONTEXTS(var w, if(w_clip_context_regen > 0 && self.w_clip_loaded >= 0) {
         self.w_clip_loaded = bound(0, self.w_clip_loaded + w_clip_context_regen * frametime, self.w_clip_limit);
     })
+
+    if(self.classname != "akimbo_ghost")
+        using(self = Akimbo_PGhost(self))
+            if(self)
+                W_Clip_PlayerPreThinkHook();
 }

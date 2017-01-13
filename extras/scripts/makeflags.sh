@@ -29,7 +29,7 @@ for srcfile in glob.glob("extras/gfx/flags/src/*.tga"):
         flag.layers[3].opacity = 30.0
         flag.layers[4].opacity = 15.0
     
-    name = "ui.pk3dir/gfx/flagicons/" + name
+    name = "o_flagicons.pk3dir/gfx/flagicons/" + name
     result = pdb.gimp_image_merge_visible_layers(flag, 1)
     pdb.gimp_file_save(flag, result, name, name)
     pdb.gimp_image_delete(flag)

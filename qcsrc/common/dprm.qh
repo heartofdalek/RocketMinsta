@@ -1,8 +1,10 @@
 
 #define USE_DPRM
+#ifndef DPRM_WEBSITE_URL
 #define DPRM_WEBSITE_URL "http://rocketminsta.net/dprm"
+#endif
 #define DPRM_MINVERSION 1
-#define DPRM_MINRECOMMENDEDVERSION 1
+#define DPRM_MINRECOMMENDEDVERSION 2
 
 float dprm_version;
 float dprm_basegame;

@@ -1,7 +1,10 @@
+#define PRYAXE_SKINS_COUNT 2
 
 .float pryaxe_attackdone;
 .float pryaxe_hit;
 .float pryaxe_oldsolid;
+.float pryaxe_count;
+.float pryaxe_skin;
 
 .entity pryaxe_thrown;
 
@@ -11,6 +14,22 @@ void spawnfunc_weapon_pryaxe(void) {
 
 void W_Pryaxe_Throw(float);
 void W_Pryaxe_Melee(float);
+
+void W_Pryaxe_SwitchWeapon(entity e, float w) {
+    var g = Akimbo_Ghost(e);
+    var o;
+
+    if(g == e)
+        g = world;
+
+    if(g)
+        o = g.switchweapon;
+
+    W_SwitchWeapon_Force(e, w);
+
+    if(g)
+        g.switchweapon = o;
+}
 
 void W_Pryaxe_Melee_Damage(float isprim) {
     const boxsize = 32;
@@ -64,7 +83,9 @@ void W_Pryaxe_Melee_Damage(float isprim) {
 void W_Pryaxe_Melee(float isprim) {
     if(!self.pryaxe_attackdone) {
         self.pryaxe_attackdone = TRUE;
-        W_Pryaxe_Melee_Damage(isprim);
+
+        using(self = Akimbo_Owner(self))
+            W_Pryaxe_Melee_Damage(isprim);
     }
 
     weapon_thinkf(WFRAME_DONTCHANGE, WEP_CVAR_BOTH(pryaxe, isprim, animtime), inline void(void) {
@@ -100,12 +121,15 @@ void W_Pryaxe_Attack(float isprim) {
 void W_Pryaxe_Return() {
     if(clienttype(self.owner) != CLIENTTYPE_NOTACLIENT) {
         //Return pryaxe to owner
-        self.owner.pryaxe_thrown = world;
+        self.enemy.pryaxe_thrown = world;
 
         if(self.owner.iscreature) {
-            if (!self.owner.weapon)
-                W_SwitchWeapon_Force(self.owner, WEP_PRYAXE);
+            self.enemy.pryaxe_count = bound(0, self.enemy.pryaxe_count + 1, CVAR(g_balance_pryaxe_throw_count));
+            if (!self.enemy.weapon)
+                W_Pryaxe_SwitchWeapon(self.enemy, WEP_PRYAXE);
             sound(self.owner, CHAN_AUTO, "weapons/weaponpickup.wav", VOL_BASE, ATTN_NORM);
+            if (self.enemy.weapon != WEP_PRYAXE)
+                self.enemy.pryaxe_skin = self.skin;
         }
     }
 
@@ -131,7 +155,7 @@ void W_Pryaxe_Flyback() {
     self.movetype = MOVETYPE_NOCLIP;
     self.solid = SOLID_NOT;
     self.think = W_Pryaxe_Flyback_Think;
-    self.nextthink = time; //+ 0.1;
+    self.nextthink = time;
     self.cnt = time + WEP_CVAR_BOTH(pryaxe, !(self.projectiledeathtype & HITTYPE_SECONDARY), throw_lifetime);
 }
 
@@ -182,23 +206,32 @@ void W_Pryaxe_Touch() {
     self.use();
 }
 
+void W_Pryaxe_Switch_Hack() {
+    if not(self.owner.weapon)
+        W_Pryaxe_SwitchWeapon(self.owner, WEP_PRYAXE);
+    remove(self);
+}
+
 void W_Pryaxe_Throw(float isprim) {
     entity proj = spawn();
 
     const pr_min = '-16 -16 -4';
     const pr_max = ' 16  16  4';
 
+    var real_plr = Akimbo_Owner(self);
+
     W_SetupShot_ProjectileSize (self, pr_min, pr_max, FALSE, 4, "", 0);
 
-    tracebox(w_shotorg, pr_min, pr_max, w_shotorg, MOVE_NOMONSTERS, self);
+    tracebox(w_shotorg, pr_min, pr_max, w_shotorg, MOVE_NOMONSTERS, real_plr);
 
     if(trace_startsolid) {
         W_Pryaxe_Melee(FALSE);
         return;
     }
 
-    W_Accuracy_RegisterShot(self, WEP_PRYAXE);
-    proj.owner = self;
+    W_Accuracy_RegisterShot(real_plr, WEP_PRYAXE);
+    proj.owner = real_plr;    // real player
+    proj.enemy = self;        // real player or akimbo ghost
     proj.classname = "pryaxe";
     proj.movetype = MOVETYPE_FLY;
     PROJECTILE_MAKETRIGGER(proj);
@@ -208,20 +241,35 @@ void W_Pryaxe_Throw(float isprim) {
     proj.use = (if (WEP_CVAR_BOTH(pryaxe, isprim, throw_flyback)) W_Pryaxe_Flyback else W_Pryaxe_Return);
     proj.think = adaptor_think2use;
     proj.nextthink = time + WEP_CVAR_BOTH(pryaxe, isprim, throw_lifetime);
+    proj.colormap = self.colormap;
     setsize(proj, pr_min, pr_max);
     setorigin(proj, w_shotorg);
     W_SetupProjectileVelocity(proj);
     proj.angles = vectoangles (proj.velocity);
     proj.flags = FL_PROJECTILE;
     proj.reset = W_Pryaxe_Return;
+    proj.clipgroup = CLIPGROUP_PLAYERMASK(real_plr) | WEP_PRYAXE;
+
+    if (self.weaponentity.weaponentity)
+        proj.skin = self.weaponentity.weaponentity.skin;
+
+    proj.csqcprojectile_extradata = proj.skin;
     CSQCProjectile(proj, TRUE, PROJECTILE_PRYAXE, TRUE);
 
     //Throw out pryaxe
     self.pryaxe_thrown = proj;
+    self.pryaxe_count = bound(0, self.pryaxe_count - 1, CVAR(g_balance_pryaxe_throw_count));
+    self.pryaxe_skin = mod(self.pryaxe_skin + 1, min(PRYAXE_SKINS_COUNT, CVAR(g_balance_pryaxe_throw_count)));
     self.weaponentity.state = WS_CLEAR;
-    W_SwitchWeapon_Force(self, 0);
+    W_Pryaxe_SwitchWeapon(self, 0);
     weapon_thinkf(WFRAME_IDLE, 0, w_ready);
     ATTACK_FINISHED(self) = time;
+    if (self.pryaxe_count > 0) {
+        entity e = spawn();
+        e.nextthink = time;
+        e.owner = self;
+        e.think = W_Pryaxe_Switch_Hack;
+    }
 }
 
 void W_Pryaxe_Attack1(void) {
@@ -233,16 +281,26 @@ void W_Pryaxe_Attack2(void) {
 }
 
 void W_Pryaxe_Attack_Sound(void) {
-    sound(self, CHAN_WEAPON, "weapons/swing.wav", VOL_BASE, ATTN_NORM);
+    sound(Akimbo_Owner(self), CHAN_WEAPON, "weapons/swing.wav", VOL_BASE, ATTN_NORM);
 }
 
 float W_Pryaxe_CheckThrown() {
-    if(self.pryaxe_thrown.classname == "pryaxe" && self.pryaxe_thrown.owner == self) {
+    if(self.pryaxe_thrown.classname == "pryaxe" && self.pryaxe_thrown.enemy == self && self.pryaxe_count <= 0) {
         return TRUE;
     }
 
     self.pryaxe_thrown = world;
     return FALSE;
+}
+
+void W_Pryaxe_DoAttack1(void) {
+    W_Pryaxe_Attack_Sound();
+    weapon_thinkf(WFRAME_FIRE1, WEP_CVAR_PRI(pryaxe, delay), W_Pryaxe_Attack1);
+}
+
+void W_Pryaxe_DoAttack2(void) {
+    W_Pryaxe_Attack_Sound();
+    weapon_thinkf(WFRAME_FIRE1, WEP_CVAR_SEC(pryaxe, delay), W_Pryaxe_Attack2);
 }
 
 float w_pryaxe(float req) {
@@ -251,16 +309,27 @@ float w_pryaxe(float req) {
     if(req == WR_AIM) {
         self.w_button_primary = bot_aim(100000, 0, 0.01, FALSE);
     } else if(req == WR_THINK) {
+        if (self.weaponentity.weaponentity)
+            self.weaponentity.weaponentity.skin = self.weaponentity.skin = self.pryaxe_skin;
+        if (self.exteriorweaponentity)
+            self.exteriorweaponentity.skin = self.pryaxe_skin;
+
         if(self.w_button_primary)
         if(weapon_prepareattack(0, CVAR(g_balance_pryaxe_primary_refire))) {
-            W_Pryaxe_Attack_Sound();
-            weapon_thinkf(WFRAME_FIRE1, WEP_CVAR_PRI(pryaxe, delay), W_Pryaxe_Attack1);
+            if(Akimbo_Active(self) == 2) {
+                defer(0.1, W_Pryaxe_DoAttack1);
+            } else {
+                W_Pryaxe_DoAttack1();
+            }
         }
 
         if(self.w_button_secondary && CVAR(g_balance_pryaxe_secondary))
         if(weapon_prepareattack(0, CVAR(g_balance_pryaxe_secondary_refire))) {
-            W_Pryaxe_Attack_Sound();
-            weapon_thinkf(WFRAME_FIRE1, WEP_CVAR_SEC(pryaxe, delay), W_Pryaxe_Attack2);
+            if(Akimbo_Active(self) == 2) {
+                defer(0.1, W_Pryaxe_DoAttack2);
+            } else {
+                W_Pryaxe_DoAttack2();
+            }
         }
     }
     else if(req == WR_PRECACHE) {
@@ -268,7 +337,7 @@ float w_pryaxe(float req) {
     } else if(req == WR_SETUP) {
         if(W_Pryaxe_CheckThrown()) {
             self.weaponentity.state = WS_CLEAR;
-            W_SwitchWeapon_Force(self, 0);
+            W_Pryaxe_SwitchWeapon(self, 0);
             return FALSE;
         }
 
@@ -277,6 +346,9 @@ float w_pryaxe(float req) {
         return !W_Pryaxe_CheckThrown();
     else if(req == WR_CHECKAMMO2)
         return !W_Pryaxe_CheckThrown();
+    else if(req == WR_RESETPLAYER) {
+        self.pryaxe_count = CVAR(g_balance_pryaxe_throw_count);
+    }
 
     return TRUE;
 }

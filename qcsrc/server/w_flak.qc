@@ -1,4 +1,6 @@
 
+.float flak_group_counter;
+
 void W_Flak_Projectile_Touch(void) {
     PROJECTILE_TOUCH;
 
@@ -59,9 +61,16 @@ void W_Flak_Projectile_Touch(void) {
         }
 
         self.owner = world;
-        self.clipgroup = CLIPGROUP_FLAK;
         self.projectiledeathtype |= HITTYPE_BOUNCE;
         self.cnt += 1;
+
+        // ensure that flak projectiles from the same batch never collide with each other
+        if(self.clipgroup != CLIPGROUP_FLAK) {
+            for(var e = world; (e = findfloat(e, flak_group_counter, self.flak_group_counter));) {
+                if(e.realowner == self.realowner && e.classname == "flak_proj")
+                    e.clipgroup = CLIPGROUP_FLAK;
+            }
+        }
     }
 }
 
@@ -82,7 +91,7 @@ void W_Flak_Projectile_Think(void) {
 
 entity W_Flak_Projectile(entity o, float damage, float grav, float lt, float spd, float upspd, float bnc, float deathtype) {
     entity e = spawn();
-    e.owner = e.realowner = o;
+    e.owner = e.realowner = Akimbo_Owner(o);
     e.classname = "flak_proj";
     e.bot_dodge = TRUE;
     e.bot_dodgerating = damage;
@@ -107,6 +116,8 @@ entity W_Flak_Projectile(entity o, float damage, float grav, float lt, float spd
     e.angles = vectoangles(e.velocity);
     e.flags = FL_PROJECTILE;
 
+    e.flak_group_counter = o.flak_group_counter;
+
     CSQCProjectile(e, TRUE, PROJECTILE_FLAK, TRUE);   
     return e;
 }
@@ -127,6 +138,8 @@ void W_Flak_Attack(float isprim, float spreadmod) {
     );
 
     w_shotdir = v_forward;
+
+    self.flak_group_counter += 1;
 
     for(i = 0; i < pcount; ++i) {
         vector a = vectoangles(w_shotdir);
@@ -182,6 +195,8 @@ void W_Flak_Bomb_Explode(void) {
         spread_up = CVAR(g_balance_flak_secondary_spread_up);
     }
 
+    self.owner.flak_group_counter += 1;
+
     for(i = 0; i < c; ++i) {
         vector a = vectoangles(dir);
 
@@ -227,7 +242,7 @@ void W_Flak_Attack_Bomb(void) {
     w_shotdir = v_forward;
 
     entity e = spawn();
-    e.owner = self;
+    e.owner = Akimbo_Owner(self);
     e.classname = "flak_bomb";
     e.bot_dodge = TRUE;
     e.bot_dodgerating = CVAR(g_balance_flak_secondary_bomb_damage);
@@ -279,6 +294,8 @@ void W_Flak_Charge(float isprim) {
         WEP_CVAR_BOTH(flak, isprim, charge_spreadmod_side) * smod + WEP_CVAR_BOTH(flak, isprim, spread_side)
     );
 
+    Akimbo_SyncSpreadIndicator(self);
+
     if(held && time < self.w_inring_fulltime)
         return;
 
@@ -287,6 +304,8 @@ void W_Flak_Charge(float isprim) {
 
     self.w_spread_indicator = -1;
     self.w_inring_fulltime = -1;
+
+    Akimbo_SyncSpreadIndicator(self);
 }
 
 float w_flak(float req) {

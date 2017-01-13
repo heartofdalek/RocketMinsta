@@ -47,7 +47,7 @@ float W_HLAC_Attack (void)
 	}
 
 	missile = spawn ();
-	missile.owner = self;
+	missile.owner = Akimbo_Owner(self);
 	missile.classname = "hlacbolt";
 	// missile.dmg = issecondary;
 	missile.bot_dodge = TRUE;
@@ -92,7 +92,7 @@ void W_HLAC_Attack2f (void)
 	pointparticles(particleeffectnum("laser_muzzleflash"), w_shotorg, w_shotdir * 1000, 1);
 
 	missile = spawn ();
-	missile.owner = self;
+	missile.owner = Akimbo_Owner(self);
 	missile.classname = "hlacbolt";
 	// missile.dmg = issecondary;
 	missile.bot_dodge = TRUE;

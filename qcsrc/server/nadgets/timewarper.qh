@@ -11,3 +11,4 @@ entity HG_TimeWarper_StartTimer(void);
 
 .float hg_twarp_expiretime;
 .float hg_twarp_warptime;
+.float hg_twarp_warpreadytime;

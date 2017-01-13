@@ -1,0 +1,5 @@
+Contents of this package may not be reproduced, distributed or used in any manner without the prior written permission of the author. 
+Permission granted to use and distribute all contents of this package within the RocketMinsta project (rocketminsta.net).
+Permission granted to use and distribute all contents of this package on any RocketMinsta game server.
+Contact information for requests for permission to use or distribute included materials:
+pbatemate@gmail.com

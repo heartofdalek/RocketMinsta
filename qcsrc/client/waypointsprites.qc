@@ -495,7 +495,7 @@ void Ent_WaypointSprite()
         if(self.netname == "Frozen!")
             self.frozenid = ReadByte();
         else
-            self.ispointer = (substring(self.netname, 0, 8) == "pointer_");
+            self.ispointer = (substring(self.netname, 0, 9) == "pointers/");
 	}
 
 	if(sendflags & 4)

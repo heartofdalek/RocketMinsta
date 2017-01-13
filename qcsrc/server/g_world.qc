@@ -766,6 +766,7 @@ void spawnfunc_worldspawn (void)
     addstat(STAT_INNERRING_CYCLE, AS_FLOAT, w_inring_cycle);
     addstat(STAT_INNERRING_FULLTIME, AS_FLOAT, w_inring_fulltime);
     addstat(STAT_AIMSPREAD, AS_FLOAT, w_spread_indicator);
+    addstat(STAT_AIMSPREAD2, AS_FLOAT, w_spread_indicator2);
 
     W_Clip_Stats_Init();
 
@@ -778,6 +779,11 @@ void spawnfunc_worldspawn (void)
     }
     
 	addstat(STAT_MINSTA, AS_INT, g_minstagib_stat);
+
+    if(g_weaponarena_secondary) {
+        addstat(STAT_WEP_SECONDARY, AS_INT, w_secondary);
+        addstat(STAT_WEP_PICKUP_CONFIRMATION, AS_INT, w_pickup_confirmation_stat);
+    }
 
 	if(g_nadgets)
         HG_Init();
@@ -856,10 +862,11 @@ void spawnfunc_worldspawn (void)
 			ShuffleMaplist();
 		localcmd("\nmenu_cmd sync\n");
 	}
-	
+
+    Akimbo_Init();
     Freeze_Init();
     Buffs_Init();
-    
+
     sv_dps = CVAR(sv_dps);
     g_allow_oldnexbeam = CVAR(g_allow_oldnexbeam);
     sv_ready_restart_after_countdown = CVAR(sv_ready_restart_after_countdown);

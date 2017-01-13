@@ -121,7 +121,7 @@ void W_Electro_Attack()
 
 	proj = spawn ();
 	proj.classname = "plasma_prim";
-	proj.owner = self;
+	proj.owner = Akimbo_Owner(self);
 	proj.bot_dodge = TRUE;
 	proj.bot_dodgerating = CVAR(g_balance_electro_primary_damage);
 	proj.use = W_Plasma_Explode;
@@ -164,7 +164,7 @@ void W_Electro_Attack2()
 
 	proj = spawn ();
 	proj.classname = "plasma";
-	proj.owner = self;
+	proj.owner = Akimbo_Owner(self);
 	proj.use = W_Plasma_Explode;
 	proj.think = adaptor_think2use;
 	proj.bot_dodge = TRUE;

@@ -193,8 +193,7 @@ void HG_Sentry_Interrupt_Capture(void) {
 }
 
 void HG_Sentry_SetOwner(entity sentry, entity newowner) {
-    if(sentry.hg_waypoint)
-        WaypointSprite_Disown(sentry.hg_waypoint, 0.5);
+    HG_Waypoint_Remove(sentry.hg_waypoint);
 
     sentry.team = if(teams_matter) newowner.team else 0;
     sentry.colormap = num_for_edict(newowner);

@@ -1,7 +1,7 @@
-title RocketMinsta Default
-author sev (Akari's edit)
+title RM default
+author rtz
 
-baseskin wickedblue
+//baseskin wickedblue
 override background
 override background_ingame
 override cursor
@@ -9,7 +9,7 @@ override cursor
 // font sizes (used for everything)
 FONTSIZE_NORMAL                 12
 HEIGHT_NORMAL                   1.5
-FONTSIZE_TITLE                  16
+FONTSIZE_TITLE                  14
 HEIGHT_TITLE                    1.5
 HEIGHT_ZOOMEDTITLE              0
 
@@ -17,7 +17,7 @@ HEIGHT_ZOOMEDTITLE              0
 //   uses "tooltip" images
 MARGIN_TOOLTIP                  '5 5 0'
 BORDER_TOOLTIP                  '1 1 0'
-FONTSIZE_TOOLTIP                12
+FONTSIZE_TOOLTIP                10
 ALPHA_TOOLTIP                   0.7
 WIDTH_TOOLTIP                   0.3
 AVOID_TOOLTIP                   '8 8 0'
@@ -84,8 +84,8 @@ ALPHA_CAMPAIGN_DESCRIPTION      0.7
 // item: checkbox
 //   uses "checkbox" images
 COLOR_CHECKBOX_N                '0.3 0.5 0.6'
-COLOR_CHECKBOX_C                '1.0 0.5 0.0'
-COLOR_CHECKBOX_F                '1.0 0.5 0.0'
+COLOR_CHECKBOX_C                '0.24 0.69 0.80'
+COLOR_CHECKBOX_F                '0.67 0.92 0.96'
 COLOR_CHECKBOX_D                '0.3 0.5 0.6'
 
 // item: color picker
@@ -136,7 +136,7 @@ COLOR_KEYGRABBER_KEYS           '1 1 1'
 ALPHA_KEYGRABBER_KEYS           0.7
 
 // item: list box
-COLOR_LISTBOX_SELECTED          '1 0.5 0'
+COLOR_LISTBOX_SELECTED          '0.24 0.69 0.80'
 ALPHA_LISTBOX_SELECTED          0.25
 COLOR_LISTBOX_WAITING           '1 0 0'
 ALPHA_LISTBOX_WAITING           0.5
@@ -167,17 +167,17 @@ ALPHA_MODELTITLE                1
 // item: radio button
 //   uses "radiobutton" images
 COLOR_RADIOBUTTON_N             '0.3 0.5 0.6'
-COLOR_RADIOBUTTON_C             '1.0 0.5 0.0'
-COLOR_RADIOBUTTON_F             '1.0 0.5 0.0'
+COLOR_RADIOBUTTON_C             '0.24 0.69 0.80'
+COLOR_RADIOBUTTON_F             '0.67 0.92 0.96'
 COLOR_RADIOBUTTON_D             '0.3 0.5 0.6'
 
 // item: scrollbar
 //   uses "scrollbar" images
 COLOR_SCROLLBAR_N               '0.3 0.5 0.6'
-COLOR_SCROLLBAR_F               '0.3 0.5 0.6'
-COLOR_SCROLLBAR_C               '1.0 0.5 0.0'
+COLOR_SCROLLBAR_F               '0.67 0.92 0.96'
+COLOR_SCROLLBAR_C               '0.24 0.69 0.80'
 COLOR_SCROLLBAR_S               '0.3 0.5 0.6'
-WIDTH_SCROLLBAR                 16
+WIDTH_SCROLLBAR                 12
 
 // item: server list
 ALPHA_SERVERLIST_FULL           0.2
@@ -200,9 +200,12 @@ COLOR_SKINLIST_AUTHOR           '0.4 0.4 0.7'
 // item: slider
 //   uses "slider" images
 COLOR_SLIDER_N                  '0.3 0.5 0.6'
-COLOR_SLIDER_C                  '1.0 0.5 0.0'
-COLOR_SLIDER_F                  '1.0 0.5 0.0'
+COLOR_SLIDER_C                  '0.24 0.69 0.80'
+COLOR_SLIDER_F                  '0.67 0.92 0.96'
 COLOR_SLIDER_D                  '0.3 0.5 0.6'
 COLOR_SLIDER_S                  '0.3 0.5 0.6'
 WIDTH_SLIDERTEXT                0.333333333333
 TOLERANCE_SLIDER                '0.2 2 0'
+
+COLOR_LOADING_BAR1 '0.1 0.6 0.7'
+COLOR_LOADING_BAR2 '0.1 0.6 0.7'

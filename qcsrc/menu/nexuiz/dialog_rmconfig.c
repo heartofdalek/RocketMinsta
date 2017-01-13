@@ -58,6 +58,9 @@ void fillNexuizRMConfigDialog(entity me)
 			OPTDEP("anonspec")
 	me.TR(me);
 		me.TD(me, 1, 4, e = makeRMCheckBox(1, "noflags", "Country flags in scoreboard"));
+#ifndef RM_SUPPORT_PKG_o_flagicons
+            e.disabled = TRUE;
+#endif
 	me.TR(me);
 		me.TD(me, 1, 4, e = makeRMCheckBox(0, "hidecountry", "Hide my country"));
 			OPTDEP("hidecountry")

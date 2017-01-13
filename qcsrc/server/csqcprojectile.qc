@@ -4,7 +4,7 @@
 float CSQCProjectile_SendEntity(entity to, float sf)
 {
 	// note: flag 0x20 = no trail please
-	sf = sf & 63;
+	sf = sf & 47;
 
 	if(self.csqcprojectile_clientanimate) {
         sf &~= 4;
@@ -18,6 +18,9 @@ float CSQCProjectile_SendEntity(entity to, float sf)
 
     if(self.bouncefactor && self.bouncefactor != 0.5)
         sf |= 32;
+
+	if (self.colormap > 0)
+		sf |= 16;
 
 	WriteByte(MSG_ENTITY, ENT_CLIENT_PROJECTILE);
 	WriteByte(MSG_ENTITY, sf);
@@ -46,7 +49,8 @@ float CSQCProjectile_SendEntity(entity to, float sf)
         
         if(self.csqcprojectile_type == PROJECTILE_HG_NAPALMSHARD        || // Burn radius
            self.csqcprojectile_type == PROJECTILE_HG_PLASMA_SHARD       || // Plasma group ID
-           self.csqcprojectile_type == PROJECTILE_HEAL_PARTICLE_EMITTER)   // Healing radius
+           self.csqcprojectile_type == PROJECTILE_HEAL_PARTICLE_EMITTER || // Healing radius
+           self.csqcprojectile_type == PROJECTILE_PRYAXE)                  // Pryaxe skin
             WriteByte(MSG_ENTITY, min(255, self.csqcprojectile_extradata)); 
     }
 
@@ -55,6 +59,9 @@ float CSQCProjectile_SendEntity(entity to, float sf)
         WriteCoord(MSG_ENTITY, self.angles_y);
         WriteCoord(MSG_ENTITY, self.angles_z);
     }
+
+    if(sf & 16)
+		WriteShort(MSG_ENTITY, self.colormap);
 
 	return 1;
 }

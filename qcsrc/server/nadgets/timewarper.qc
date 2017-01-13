@@ -19,22 +19,14 @@ void HG_TimeWarper_SaveMoment(void) {
 
 float HG_TimeWarper_Trigger(float force) {
     if(self.hg_twarp_moment) {
-        if(!force) {
-            var found = FALSE;
-
-            HG_LOOP_FOR_ALL_CONTEXTS(var i, {
-                if(self.hg_ctx_type == HG_TIMEWARP) {
-                    found = TRUE;
-                    break;
-                }
-            })
-
-            if(found && self.hg_ctx_next > time)
-                return FALSE;
-        }
+        if(!force && time < self.hg_twarp_warpreadytime)
+            return FALSE;
 
         if(self.flagcarried)
             DropFlag(self.flagcarried, world, world);
+
+        var ha_penalty = CVAR(g_nadgets_timewarper_health_penalty);
+        var ha_prev = self.health + self.armorvalue;
 
         sound(self, CHAN_TRIGGER, "misc/teleport.wav", VOL_BASE, ATTN_NORM);
         pointparticles(particleeffectnum("teleport"), self.origin, '0 0 0', 1);
@@ -44,15 +36,24 @@ float HG_TimeWarper_Trigger(float force) {
         pointparticles(particleeffectnum("teleport"), self.origin, '0 0 0', 1);
         HG_TimeWarper_Abort();
 
+        ha_penalty *= max(0, self.health + self.armorvalue - ha_prev);
+        if(ha_penalty)
+            Damage(self, self, self, ha_penalty, HG_TIMEWARP, self.origin, '0 0 0');
+
         return TRUE;
     }
 
     return FALSE;
 }
 
+void HG_TimeWarper_RemoveTimer(entity e) {
+    HG_Waypoint_Remove(e.hg_waypoint);
+    remove(e);
+}
+
 void HG_TimeWarper_StopTimer(void) {
     if(self.hg_twarp_timer) {
-        remove(self.hg_twarp_timer);
+        HG_TimeWarper_RemoveTimer(self.hg_twarp_timer);
         self.hg_twarp_timer = world;
     }
 }
@@ -63,8 +64,16 @@ entity HG_TimeWarper_StartTimer(void) {
     var e = spawn() {
         owner: self,
         origin: self.origin,
-        nextthink: self.hg_twarp_expiretime,
+        nextthink: time,
+        hg_deathtime: self.hg_twarp_expiretime,
+        hg_type: HG_TIMEWARP,
         think: inline void(void) {
+            if(time < self.hg_deathtime) {
+                HG_Waypoint();
+                self.nextthink = time;
+                return;
+            }
+
             using(self = self.owner) {
                 if(Buffs_Present(self, BUFF_ADEPT))
                     HG_TimeWarper_Abort();
@@ -72,7 +81,9 @@ entity HG_TimeWarper_StartTimer(void) {
                     HG_TimeWarper_Trigger(TRUE);
             }
         },
-        reset: SUB_Remove,
+        reset: inline void(void) {
+            HG_TimeWarper_RemoveTimer(self);
+        },
     };
 
     Buffs_MEODP_Point_Attach(e, inline void(entity attacker, entity inflictor) {
@@ -91,6 +102,7 @@ entity HG_TimeWarper_StartTimer(void) {
     });
 
     self.hg_twarp_timer = e;
+
     return e;
 }
 
@@ -100,6 +112,7 @@ HG_HOOKFUNCTION(timewarper, Attack) {
     // Do it in the next frame, so that the timewarper nadget ammo is saved as consumed
     defer(0, inline void(void) {
         HG_TimeWarper_SaveMoment();
+        self.hg_twarp_warpreadytime = time + CVAR(g_nadgets_timewarper_cooldown);
         self.hg_twarp_expiretime = time + (
             if(Buffs_Present(self, BUFF_ADEPT))
                 CVAR(g_nadgets_timewarper_adept_duration)

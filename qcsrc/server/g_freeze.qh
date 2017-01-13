@@ -22,6 +22,7 @@ float g_freeze_globalwarming_reset;
 .float spawnstate_team;
 .vector spawnstate_origin;
 .vector spawnstate_angles;
+.float spawnstate_w_secondary;
 
 .entity freeze_waypoint;
 .entity iceblock;

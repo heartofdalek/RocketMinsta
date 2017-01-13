@@ -732,15 +732,24 @@ vector DrawPlayerStatusIcons(vector pos, float height, float a, float b, float p
         }
     }
 
-    // 2nd byte: secondary weapon
+    // 2nd byte: secondary weapon (with akimbo bit)
     if(g_weaponarena_secondary & (g_weaponarena_secondary - 1)) {
-        var winfo = get_weaponinfo((pstat & 0xFF00) / 0x100);
+        var wep = (pstat & 0xFF00) / 0x100;
+        var akimbo = wep & 0x80;
+        wep = wep & 0x7F;
+
+        var winfo = get_weaponinfo(wep);
         var clr = winfo.w_color * b;
 
         using(drawfont = sbar_rmbigfont)
             drawstring_aspect(pos, winfo.message2, scale, clr, a, DRAWFLAG_NORMAL);
 
-        drawpic(pos, "gfx/hud/weapon_icon_border.tga", scale, clr, a * 0.8, DRAWFLAG_NORMAL);
+        drawpic(pos,
+            if(akimbo)
+                "gfx/hud/weapon_icon_border_akimbo"
+            else
+                "gfx/hud/weapon_icon_border",
+            scale, clr, a * 0.8, DRAWFLAG_NORMAL);
 
         pos_x += scale_x;
     }

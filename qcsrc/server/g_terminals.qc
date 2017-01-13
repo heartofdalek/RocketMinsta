@@ -129,6 +129,10 @@ void Term_Hook_PlayerPreThink(void) {
             self.buff_cdoverride = -1;
             sound(self, CHAN_TRIGGER, "weapons/rocket_mode.wav", VOL_BASE, ATTN_NORM);
             HG_ShowMenu(TRUE);
+
+            if(g_weaponarena_secondary && !self.w_secondary) {
+                W_SetSecondary(self, self.w_secondary_picked);
+            }
         }
     }
 }

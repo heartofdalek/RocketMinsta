@@ -211,7 +211,7 @@ void bot_setnameandstuff()
         self.hg_type1_picked = self.hg_type2_picked = HG_RANDOM;
 
     if(g_weaponarena_secondary)
-        self.w_secondary = log2of(randombit(g_weaponarena_secondary)) + 1;
+        self.w_secondary = self.w_secondary_picked = log2of(randombit(g_weaponarena_secondary)) + 1;
 }
 
 void bot_custom_weapon_priority_setup()

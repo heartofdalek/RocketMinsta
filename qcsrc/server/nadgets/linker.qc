@@ -7,12 +7,17 @@ void HG_Linker_Adept_Push(entity p) {
     }
 }
 
+void HG_Linker_Remove(void) {
+    HG_Waypoint_Remove(self.hg_waypoint);
+    remove(self);
+}
+
 void HG_Linker_Think(void) {
     entity p, e;
     float denom, thealth, tarmor, sharefactor;
 
     if(!self.owner.iscreature || self.owner.team != self.team) {
-        remove(self);
+        HG_Linker_Remove();
         return;
     }
 
@@ -102,9 +107,11 @@ void HG_Linker_Think(void) {
     self.alpha = bound(0, (self.cnt - time) * 2, 1);
 
     if(self.alpha == 0) {
-        remove(self);
+        HG_Linker_Remove();
         return;
     }
+
+    HG_Waypoint();
 
     self.alpha = max(0.01, self.alpha * bound(0, (time - self.hg_spawntime) * 2, 1));
     self.glow_size = self.hg_linker_range * self.alpha * 3;
@@ -112,7 +119,7 @@ void HG_Linker_Think(void) {
 }
 
 void HG_Linker_MEODP_Death(entity attacker, entity inflictor) {
-    remove(self);
+    HG_Linker_Remove();
 }
 
 HG_HOOKFUNCTION(linker, Attack) {
@@ -123,19 +130,21 @@ HG_HOOKFUNCTION(linker, Attack) {
     e.think = HG_Linker_Think;
     e.nextthink = time;
     e.hg_spawntime = time;
-    e.reset = SUB_Remove;
+    e.reset = HG_Linker_Remove;
     e.effects = EF_ADDITIVE | EF_FULLBRIGHT | EF_LOWPRECISION | EF_DOUBLESIDED;
     e.gravity = 100;
     e.hg_linker_range = CVAR(g_nadgets_linker_range);
     e.hg_linker_factor = CVAR(g_nadgets_linker_damagefactor);
     e.hg_linker_hps = CVAR(g_nadgets_linker_hps);
     e.cnt = time + CVAR(g_nadgets_linker_duration) * Buffs_NadgetPower(self);
+    e.hg_deathtime = e.cnt;
     e.alpha = 0.01;
     setmodel(e, "models/ctf/shield.md3");
     e.scale = e.hg_linker_range / e.maxs_x;
     e.glow_color = 0xF5;
     e.hg_adept = Buffs_Present(self, BUFF_ADEPT);
     e.movetype = MOVETYPE_TOSS;
+    e.hg_type = HG_LINKER;
 
     if(e.team)
         e.skin = TeamColorSkin(e.team);

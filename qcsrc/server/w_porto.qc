@@ -262,6 +262,8 @@ float w_porto(float req)
 		precache_sound ("porto/fire.wav");
 		precache_sound ("porto/unsupported.wav");
 	}
+    else if (req == WR_CLEAR)
+        W_Porto_Remove(self);
 	else if (req == WR_SETUP)
 		weapon_setup(WEP_PORTO);
 	else if (req == WR_RESETPLAYER)

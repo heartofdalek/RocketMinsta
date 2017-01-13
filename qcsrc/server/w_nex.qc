@@ -121,7 +121,7 @@ void W_Nex_Attack2(void) {
 }
 
 void W_Nex_ChargeEffect_Think(void) {
-    if(!self.owner.iscreature || !PlayerMayFire(self.owner)) {
+    if(!Akimbo_Owner(self.owner).iscreature || !PlayerMayFire(Akimbo_Owner(self.owner))) {
         if(self == self.owner.nex_charge_effect)
             self.owner.nex_charge_effect = world;
 
@@ -166,7 +166,8 @@ void W_Nex_ChargeEffect_Spawn(float ct) {
         self.nex_charge_effect.cnt = -1;
 
     entity e = spawn();
-    setmodel(e, "models/ebomb.mdl");
+    setmodel(e, "models/nexcharge.iqm");
+    // setmodel(e, "models/ebomb.mdl");
     e.skin = 2;
     e.cnt = ct;
     e.think = W_Nex_ChargeEffect_Think;
@@ -174,9 +175,10 @@ void W_Nex_ChargeEffect_Spawn(float ct) {
     e.scale = 0.01;
     e.enemy = e;
     e.pflags = PFLAGS_FULLDYNAMIC;
+    e.owner = self;
     e.color = '0.3 0.3 0.3' + 0.7 * TeamColor(if(self.team > 0) self.team else COLOR_TEAM2);
-    e.colormap = num_for_edict(self);
-    W_AttachToShotorg(e, '0 0 1');
+    e.colormap = self.colormap;
+    W_AttachToShotorg(e, '-10 0 2');
 
     // needs to be done AFTER W_AttachToShotorg
     e.customizeentityforclient = CL_Weaponentity_CustomizeEntityForClient;
@@ -305,6 +307,7 @@ float w_nex(float req)
 	else if (req == WR_PRECACHE)
 	{
 		precache_model("models/nexflash.md3");
+        precache_model("models/nexcharge.iqm");
 		precache_sound("weapons/nexfire.wav");
 		precache_sound("weapons/nexwhoosh1.wav");
 		precache_sound("weapons/nexwhoosh2.wav");

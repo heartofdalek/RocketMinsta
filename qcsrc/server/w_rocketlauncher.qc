@@ -1,11 +1,12 @@
 .float rl_release;
 .float rl_detonate_later;
+.entity notrealowner;
 
 void W_Rocket_Unregister()
 {
-	if(self.owner && self.owner.lastrocket == self)
+	if(self.owner && self.notrealowner.lastrocket == self)
 	{
-		self.owner.lastrocket = world;
+		self.notrealowner.lastrocket = world;
 		// self.owner.rl_release = 1;
 	}
 }
@@ -93,7 +94,7 @@ entity FindLaserTarget(entity e, float dist_variance, float dot_variance)
 void W_Rocket_RemoteExplode()
 {
 	if(self.owner.deadflag == DEAD_NO)
-	if(self.owner.lastrocket) {
+	if(self.notrealowner.lastrocket) {
 		if(  (if(self.spawnshieldtime >= 0)
                   time >= self.spawnshieldtime // timer
 		      else
@@ -202,7 +203,7 @@ void W_Rocket_Think (void)
 		}
 		else
 		{
-			if(self == self.owner.lastrocket)
+			if(self == self.notrealowner.lastrocket)
 			if(!self.owner.rl_release)
 			if(CVAR(g_balance_rocketlauncher_guiderate))
 			if(time > self.pushltime)
@@ -288,7 +289,8 @@ void W_Rocket_Attack (void)
 	pointparticles(particleeffectnum("rocketlauncher_muzzleflash"), w_shotorg, w_shotdir * 1000, 1);
 
 	missile = spawn ();
-	missile.owner = self;
+	missile.owner = Akimbo_Owner(self);
+	missile.notrealowner = self;
 	self.lastrocket = missile;
 	if(CVAR(g_balance_rocketlauncher_detonatedelay) >= 0)
 		missile.spawnshieldtime = time + CVAR(g_balance_rocketlauncher_detonatedelay);
@@ -314,6 +316,8 @@ void W_Rocket_Attack (void)
 		missile.velocity = w_shotdir * CVAR(g_balance_rocketlauncher_laserguided_speedstart) * g_weaponspeedfactor;
 	else
 		missile.velocity = w_shotdir * CVAR(g_balance_rocketlauncher_speedstart) * g_weaponspeedfactor;
+    if (Akimbo_Active(self) == 2)
+        missile.velocity = missile.velocity * 1.5;
 	W_SetupProjectileVelocity(missile);
 	missile.angles = vectoangles (missile.velocity);
 
@@ -458,7 +462,7 @@ float w_rlauncher(float req)
                 if (self.w_button_primary && self.rl_release)
                 if (W_Clip_TryAttackOrReload()) {
                     rockfound = 0;
-                    for(rock = world; (rock = find(rock, classname, "rocket")); ) if(rock.owner == self)
+                    for(rock = world; (rock = find(rock, classname, "rocket")); ) if(rock.notrealowner == self)
                     {
                         if(!rock.rl_detonate_later)
                         {

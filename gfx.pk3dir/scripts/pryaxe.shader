@@ -27,3 +27,13 @@ pryaxe_balls_outer
         rgbGen lightingDiffuse
     }
 }
+
+textures/pryaxe2
+{
+    dpreflectcube cubemaps/rtzapper/reflect1
+    {
+        map textures/pryaxe2.tga
+        rgbGen lightingDiffuse
+    }
+}
+

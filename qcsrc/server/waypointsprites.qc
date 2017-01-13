@@ -198,11 +198,12 @@ void WaypointSprite_Think()
 
 	doremove = FALSE;
 
-	if(self.fade_time)
-	{
+	if(self.fade_time) {
 		if(time >= self.teleport_time)
 			doremove = TRUE;
-	}
+	} else if(self.owned_by_field && (wasfreed(self.owner) || self.owner.(self.owned_by_field) != self)) {
+        WaypointSprite_Disown(self, 0.5);
+    }
 
 	if(self.exteriormodeltoclient)
 		WaypointSprite_UpdateOrigin(self, self.exteriormodeltoclient.origin + self.view_ofs);

@@ -212,7 +212,7 @@ void TimeTravel_EraseMoment(entity moment) {
         e.nextthink = time;
     }
 
-    remove(self);
+    remove(moment);
 }
 
 #undef TIMETRAVEL_HANDLE_ALL

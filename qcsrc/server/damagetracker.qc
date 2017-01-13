@@ -97,16 +97,10 @@ void DamageTracker_RecordAndSend(entity keeper, float dtype, float damage, float
         return;
     }
 
-    if(clienttype(keeper.owner) == CLIENTTYPE_REAL) {
-        msg_entity = keeper.owner;
-        DamageTracker_Send(MSG_ONE, dtype, damage, dtflags);
-    }
-
-    entity e;
-    FOR_EACH_REALCLIENT(e) {
-        if(e.enemy == keeper.owner && e.classname == "spectator") {
+    FOR_EACH_REALCLIENT(var e) {
+        if(e.clientcamera == keeper.owner) {
             msg_entity = e;
-            DamageTracker_Send(MSG_ONE, dtype, damage, dtflags | DTFLAG_SPEC);
+            DamageTracker_Send(MSG_ONE, dtype, damage, dtflags | (if(e == keeper.owner) 0 else DTFLAG_SPEC));
         }
     }
 }

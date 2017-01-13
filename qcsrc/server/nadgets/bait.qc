@@ -7,8 +7,7 @@ void HG_Bait_Body_Remove(entity body) {
     if(body.freeze_waypoint)
         WaypointSprite_Disown(body.freeze_waypoint, 0.5);
 
-    if(body.hg_waypoint)
-        WaypointSprite_Disown(body.hg_waypoint, 0.5);
+    HG_Waypoint_Remove(body.hg_waypoint);
 
     if(body.iceblock)
         remove(body.iceblock);

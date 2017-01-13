@@ -74,6 +74,8 @@ napalm.qh
 cl_specinfo.qh
 cl_weapons_reload.qh
 
+akimbo.qh
+
 ../common/util.qc
 scores_rules.qc
 miscfunctions.qc
@@ -137,6 +139,8 @@ w_pryaxe.qc
 t_items.qc
 cl_weapons.qc
 cl_impulse.qc
+
+akimbo.qc
 
 ent_cs.qc
 

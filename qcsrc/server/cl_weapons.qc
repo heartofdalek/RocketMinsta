@@ -4,17 +4,20 @@ void W_Reload()
 	if(self.switchweapon == self.weapon)
 	if(self.weaponentity.state == WS_READY)
 		weapon_action(self.weapon, WR_RELOAD);
+
+    entity oldself = self;
+    self = Akimbo_Ghost(self);
+    if (self)
+    if (self != oldself)
+        W_Reload();
+    self = oldself;
 }
 
 float W_ToggleSecondary(void) {
     if(g_weaponarena_secondary && self.w_conv_switch) {
         var w = pow(2, self.switchweapon - 1) | pow(2, self.weapon - 1);
         var hasweapon = (self.switchweapon || self.weapon);
-
-        var secondary = if(self.w_secondary)
-            pow(2, self.w_secondary - 1)
-        else
-            g_weaponarena_secondary;
+        var secondary = W_WeaponBit(self.w_secondary);
 
         if(w & secondary || !hasweapon) {
             self.weapons &~= secondary;
@@ -223,7 +226,11 @@ void thrown_wep_think()
 {
 	self.solid = SOLID_TRIGGER;
 	self.owner = world;
-	SUB_SetFade(self, time + 20, 1);
+
+    var st = CVAR(g_thrownweapon_staytime);
+
+    if(st > 0)
+	   SUB_SetFade(self, time + st, 1);
 }
 
 // returns amount of ammo used as string, or -1 for failure, or 0 for no ammo count
@@ -253,7 +260,7 @@ string W_ThrowNewWeapon(entity own, float wpn, float doreduce, vector org, vecto
 		if(startitem_failed)
 			return NULL;
 		wep.think = thrown_wep_think;
-		wep.nextthink = time + 0.5;
+		wep.nextthink = time + CVAR(g_thrownweapon_pickupdelay);
 		return "";
 	}
 	else
@@ -281,7 +288,7 @@ string W_ThrowNewWeapon(entity own, float wpn, float doreduce, vector org, vecto
 			s = substring(s, 5, -1);
 		}
 		wep.think = thrown_wep_think;
-		wep.nextthink = time + 0.5;
+		wep.nextthink = time + CVAR(g_thrownweapon_pickupdelay);
 		return s;
 	}
 }
@@ -347,6 +354,39 @@ void W_ThrowWeapon(vector velo, vector delta, float doreduce)
 	}
 };
 
+void W_UpdateSecondaryWeaponStatus(entity p) {
+    if(!p.scorekeeper)
+        return;
+
+    var s = p.scorekeeper.(scores[SP_STATUSICONS]) & 0xFFFF00FF;
+    var w = p.w_secondary & 0x7F;
+
+    if(Akimbo_HaveWeapon(p, w))
+        w += 0x80;
+
+    PlayerScore_Set(p, SP_STATUSICONS, s + (w * 0x100) & 0x0000FF00);
+}
+
+void W_ThrowSecondary_Once(void) {
+    var org = self.origin + (self.mins + self.maxs) * 0.5;
+    W_ThrowNewWeapon(self, self.w_secondary, FALSE, org, randomvec() * 125 + '0 0 200');
+}
+
+.float akimbo_weapons;
+
+void W_ThrowSecondary(void) {
+    if(!self.w_secondary)
+        return;
+
+    W_ThrowSecondary_Once();
+
+    if(Akimbo_HaveWeapon(self, self.w_secondary)) {
+        self.akimbo_weapons &~= W_WeaponBit(self.w_secondary);
+        W_UpdateSecondaryWeaponStatus(self);
+        W_ThrowSecondary_Once();
+    }
+}
+
 .float w_instaswitch;
 // Bringed back weapon frame
 void W_WeaponFrame()
@@ -376,20 +416,30 @@ void W_WeaponFrame()
 	// Change weapon
 	if (self.weapon != self.switchweapon)
 	{
-		if (self.weaponentity.state == WS_CLEAR)
+        float r = CVAR(g_balance_weaponswitchdelay);
+        if(self.w_instaswitch) {
+            self.w_instaswitch = FALSE;
+            r = 0;
+        }
+
+        if (!r) {
+            if (Akimbo_Active(self) > 1)
+            if not(Akimbo_HaveWeapon(self, self.switchweapon))
+                return;
+            weapon_action(self.weapon, WR_CLEAR);
+            weapon_action(self.switchweapon, WR_SETUP);
+            weapon_thinkf(WFRAME_IDLE, 0, w_ready);
+            weapon_boblayer1(PLAYER_WEAPONSELECTION_SPEED, '0 0 0');
+        }
+		else if (self.weaponentity.state == WS_CLEAR)
 		{
-            float r = 1;
-            if(self.w_instaswitch) {
-                self.w_instaswitch = FALSE;
-                r = 0;
-            }
-            
 			setanim(self, self.anim_draw, FALSE, TRUE, TRUE);
 			self.weaponentity.state = WS_RAISE;
+            weapon_action(self.weapon, WR_CLEAR);
 			weapon_action(self.switchweapon, WR_SETUP);
 			// VorteX: add player model weapon select frame here
 			// setcustomframe(PlayerWeaponRaise);
-			weapon_thinkf(WFRAME_IDLE, CVAR(g_balance_weaponswitchdelay) * r, w_ready);
+			weapon_thinkf(WFRAME_IDLE, r, w_ready);
 			weapon_boblayer1(PLAYER_WEAPONSELECTION_SPEED, '0 0 0');
 		}
 		else if (self.weaponentity.state == WS_READY)
@@ -589,11 +639,7 @@ void W_FixWeaponSet(void) {
     if(g_weaponarena && g_weaponarena_secondary && !self.w_conv_switch) {
         var w = pow(2, self.switchweapon - 1) | pow(2, self.weapon - 1);
         var hasweapon = (self.switchweapon || self.weapon);
-
-        var secondary = if(self.w_secondary)
-            pow(2, self.w_secondary - 1)
-        else
-            g_weaponarena_secondary;
+        var secondary = W_WeaponBit(self.w_secondary);
 
         if(self.BUTTON_ATCK && (w & secondary || !hasweapon)) {
             self.weapons &~= secondary;
@@ -613,6 +659,9 @@ void W_PlayerPreThinkHook(void) {
 }
 
 void W_SetSecondary(entity p, float w) {
+    if(!g_weaponarena_secondary)
+        return;
+
     if(p.w_secondary) {
         var sflag = pow(2, p.w_secondary - 1);
 
@@ -625,10 +674,12 @@ void W_SetSecondary(entity p, float w) {
 
     p.w_secondary = w;
 
-    if(p.scorekeeper) {
-        var s = p.scorekeeper.(scores[SP_STATUSICONS]) & 0xFFFF00FF;
-        PlayerScore_Set(p, SP_STATUSICONS, s + (w * 0x100) & 0x0000FF00);
+    if(!p.weapons) {
+        p.weapons |= W_WeaponBit(w);
+        W_SwitchWeapon_Force(p, w);
     }
+
+    W_UpdateSecondaryWeaponStatus(p);
 }
 
 void W_RegisterHitForHitstreak(entity attacker, float deathtype) {
@@ -664,10 +715,10 @@ float W_ShowMenu(float always) {
     if(clienttype(self) != CLIENTTYPE_REAL)
         return FALSE;
 
-    if((self.w_secondary && self.BUTTON_CHAT) && always < 2)
+    if((self.w_secondary_picked && self.BUTTON_CHAT) && always < 2)
         return FALSE;
     
-    if(always || !self.w_secondary) {
+    if(always || !self.w_secondary_picked) {
         W_WriteSecondarySelect();
         return TRUE;
     }

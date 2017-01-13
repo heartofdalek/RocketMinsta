@@ -580,6 +580,8 @@ string CheckPlayerModel(string plyermodel) {
 }
 
 float Client_CalculateAlpha(entity plr, entity viewer) {
+    plr = Akimbo_Owner(plr);
+
     if(!plr.iscreature) {
         if(plr.classname == "observer") {
             if(plr == viewer)
@@ -821,8 +823,11 @@ void PutObserverInServer (void)
         self.hg_shield = 0;
     }
 
-    if(!self.joinqueue)
+    if(!self.joinqueue) {
         self.w_secondary = 0;
+        self.w_secondary_picked = 0;
+        self.w_secondary_nextround = 0;
+    }
 
     self.frozenrow = 0;
     self.jb_unlock_progress = 0;
@@ -895,6 +900,8 @@ void PutObserverInServer (void)
 	self.punchvector = '0 0 0';
 	self.oldvelocity = self.velocity;
 	self.fire_endtime = -1;
+
+    Akimbo_Clear(self);
 
 	if(sv_loddistance1)
 		SetCustomizer(self, Client_customizeentityforclient, Client_uncustomizeentityforclient);
@@ -1176,6 +1183,7 @@ void PutClientInServer (void)
 
     self.clipgroup = CLIPGROUP_NONE;
     self.w_spread_indicator = -1;
+    self.w_spread_indicator2 = -1;
 
     self.hg_plasmalock = 0;
     self.hg_wasstealth = FALSE;
@@ -1187,6 +1195,10 @@ void PutClientInServer (void)
     self.hg_shield_stored = 0;
     self.hg_stealth = 0;
     self.hg_shieldstat = 0;
+
+    Akimbo_Clear(self);
+
+    self.w_pickup_confirmation_stat = 0;
 
     self.colormap = num_for_edict(self);
 
@@ -1389,9 +1401,11 @@ void PutClientInServer (void)
 
 		target_voicescript_clear(self);
 
+        Akimbo_OnPlayerSpawn(self);
+
 		// reset fields the weapons may use
         for (j = WEP_FIRST; j <= WEP_LAST; ++j)
-            weapon_action(j, WR_RESETPLAYER);
+            Akimbo_WeaponAction(j, WR_RESETPLAYER);
 
 		oldself = self;
 		self = spot;
@@ -1399,10 +1413,12 @@ void PutClientInServer (void)
 				SUB_UseTargets();
 			activator = world;
 		self = oldself;
-		
+
+        W_SetSecondary(self, self.w_secondary_picked);
+
         Freeze_Hook_PlayerSpawns();
 		JB_PlayerSpawn();
-        
+
         if(g_nadgets) {
             if(self.wasingame)
                 HG_PlayerSpawn();
@@ -1411,7 +1427,6 @@ void PutClientInServer (void)
         }
 
         W_Clip_ResetAll(TRUE);
-        W_SetSecondary(self, self.w_secondary);
         Boobs_Attach();
 
         self.wasingame = TRUE;
@@ -1460,7 +1475,7 @@ float ClientInit_SendEntity(entity to, float sf)
 	if(g_grappling_hook)
 		myhook_shotorigin = '8 -8 -12';
 	else
-		myhook_shotorigin = shotorg_adjust('26.2148 9.2059 -15.9772', TRUE, TRUE);
+		myhook_shotorigin = shotorg_adjust('26.2148 9.2059 -15.9772', TRUE, TRUE, FALSE);
 	WriteCoord(MSG_ENTITY, myhook_shotorigin_x);
 	WriteCoord(MSG_ENTITY, myhook_shotorigin_y);
 	WriteCoord(MSG_ENTITY, myhook_shotorigin_z);
@@ -1477,6 +1492,7 @@ float ClientInit_SendEntity(entity to, float sf)
         WriteByte(MSG_ENTITY, (HG_SelectableTypes(FALSE) != ""));
         WriteByte(MSG_ENTITY, g_nadgets_double);
     }
+    WriteInt24_t(MSG_ENTITY, g_weaponarena);
     WriteInt24_t(MSG_ENTITY, g_weaponarena_secondary);
     WriteByte(MSG_ENTITY, g_freeze);
     WriteByte(MSG_ENTITY, sv_scoreboard_heal_column);
@@ -1662,18 +1678,27 @@ void ClientKill_TeamChange (float targetteam) // 0 = don't change, -1 = auto
 
 void ClientKill (void)
 {
+    if(PlayerIsDead(self))
+        return;
 	ClientKill_TeamChange(0);
 }
 
 void DoTeamChange(float destteam)
 {
 	float t, c0;
+
 	if(!teams_matter)
 	{
 		if(destteam >= 0)
 			SetPlayerColors(self, destteam);
 		return;
 	}
+
+    if(self.classname == "player" && PlayerIsDead(self)) {
+        centerprint_spec(self, "You can't switch team while you're dead");
+        return;
+    }
+
 	if(self.classname == "player")
 	if(destteam == -1)
 	{
@@ -2007,6 +2032,8 @@ void ClientDisconnect (void)
 		fclose(self.hitplotfh);
 		self.hitplotfh = -1;
 	}
+
+    Akimbo_Clear(self);
 
     JoinQ_Remove(self);
 	bot_clientdisconnect();
@@ -3445,6 +3472,7 @@ void PlayerPreThink (void)
 			self.items &~= self.items_added;
 
 			W_WeaponFrame();
+            Akimbo_WeaponFrame();
 
 			self.items_added = 0;
 			if(self.items & IT_JETPACK)
@@ -3467,6 +3495,9 @@ void PlayerPreThink (void)
 		self.dmg_team = max(0, self.dmg_team - CVAR(g_teamdamage_resetspeed) * frametime);
 
         W_Zapper_Cooloff();
+
+        if(time >= self.w_pickup_confirmation + frametime * 3)
+            self.w_pickup_confirmation_stat = 0;
 	} else {
         if(self.solid) {
             bprint("BUG: spectator/observer was solid\n");

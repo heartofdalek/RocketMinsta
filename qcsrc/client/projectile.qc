@@ -251,7 +251,7 @@ void Projectile_Draw()
 			//case PROJECTILE_HG_PLASMA:
             case PROJECTILE_PRYAXE:
 			case PROJECTILE_GRENADE_BOUNCING:
-				rot = '0 -1000 0'; // sideways
+				rot = '0 1000 0'; // sideways
 				break;
 			case PROJECTILE_HOOKBOMB:
 				rot = '1000 0 0'; // forward
@@ -432,7 +432,8 @@ void Ent_Projectile()
 
         if(self.cnt == PROJECTILE_HG_NAPALMSHARD ||
            self.cnt == PROJECTILE_HG_PLASMA_SHARD ||
-           self.cnt == PROJECTILE_HEAL_PARTICLE_EMITTER)
+           self.cnt == PROJECTILE_HEAL_PARTICLE_EMITTER ||
+           self.cnt == PROJECTILE_PRYAXE)
             self.extradata = ReadByte();
 
 		self.silent = (self.cnt & 0x80);
@@ -515,7 +516,8 @@ void Ent_Projectile()
             case PROJECTILE_FLAK: setmodel(self, "models/tracer.mdl"); break;
             case PROJECTILE_FLAK_BOMB: setmodel(self, "models/rocket.md3"); break;
             case PROJECTILE_PRYAXE:
-                setmodel(self, "models/weapons/pryaxe_thrown.md3");
+                self.skin = self.extradata;
+                setmodel(self, "models/weapons/pryaxe2_thrown.iqm");
                 SetupProjectileColormap(COLOR_TEAM1);
                 break;
 			default:
@@ -631,6 +633,9 @@ void Ent_Projectile()
         self.use_server_angles = TRUE;
     }
 
+	if (f & 16)
+		self.colormap = ReadShort();
+
 	if(self.gravity)
 	{
 		if(self.move_movetype == MOVETYPE_FLY)
@@ -651,7 +656,7 @@ void Ent_Projectile()
 		if(f & 0x20)
 			InterpolateOrigin_Note(); //Call this second time to avoid bug with rocket trail and warp. How do it better?
 	}
-	
+
 	self.draw = Projectile_Draw;
 	self.entremove = Ent_RemoveProjectile;
 }
@@ -672,7 +677,7 @@ void Projectile_Precache()
     precache_model("models/translocator.iqm");
     precache_model("models/raze.md3");
     precache_model("models/sphere/sphere.md3");
-    precache_model("models/weapons/pryaxe_thrown.md3");
+    precache_model("models/weapons/pryaxe2_thrown.iqm");
     precache_model("models/handgrenade.iqm");
     precache_model("models/plasmabomb.iqm");
 	precache_sound("weapons/electro_fly.wav");

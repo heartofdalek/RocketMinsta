@@ -144,6 +144,9 @@ void InitGameplayMode()
 
 	if(g_tdm)
 	{
+		if (CVAR(g_tdm_fraglimit_override) > 0)
+			fraglimit_override = CVAR(g_tdm_fraglimit_override);
+
 		ActivateTeamplay();
 		tdm_init();
 	}

@@ -292,6 +292,7 @@ float sv_scoreboard_alive_column;
 float g_nadgets;
 float g_nadgets_double;
 float sv_scoreboard_heal_column;
+float g_weaponarena;
 float g_weaponarena_secondary;
 float g_freeze;
 

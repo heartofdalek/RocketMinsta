@@ -27,6 +27,7 @@ void HG_GenericProjectile_ThrowNapalm(void) {
             GRENVAR(self.hg_type, "edgeburndamage"),
             GRENVAR(self.hg_type, "burntime")
         ) {
+            owner: self, // don't collide with the GenericProjectile that spawned it
             jb_proj_ownerstate: self.jb_proj_ownerstate,
             velocity: RandomSpreadVector(
                 GRENVAR(self.hg_type, "spread_xy"),

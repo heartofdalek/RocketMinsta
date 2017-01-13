@@ -14,7 +14,7 @@ void Napalm_Burn(void) {
     var dist = self.napalm_burn_radius;
     var burntime = self.napalm_burn_time;
 
-    o = self.owner;
+    o = self.realowner;
 
     if(dtype != DEATH_HURTTRIGGER) {
         if(o.classname != "player" || o.team != self.team) {
@@ -64,7 +64,7 @@ void Napalm_Think(void) {
     }
 
     if(self.projectiledeathtype != DEATH_HURTTRIGGER)
-        HealParticleEmitter(self.owner);
+        HealParticleEmitter(self.realowner);
 
     Napalm_Burn();
 
@@ -75,6 +75,7 @@ entity Napalm_Spawn(entity powner, vector porg, float lifetime, float lifetime_r
                     float burnradius, float burndamage, float burnedgedamage, float burntime) {
     var proj = spawn() {
         classname: "napalm",
+        realowner: powner,
         owner: powner,
         projectiledeathtype: deathtype,
         movetype: MOVETYPE_BOUNCE,

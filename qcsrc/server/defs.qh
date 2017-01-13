@@ -168,12 +168,19 @@ float maxclients;
 .vector anim_forwardleft; // player running forward and left
 .vector anim_backright; // player running backward and right
 .vector anim_backleft; // player running back and left
+.vector anim_melee;
 
 // weapon animation vectors:
 .vector anim_fire1;
 .vector anim_fire2;
 .vector anim_idle;
 .vector anim_reload;
+
+// weapon animation vectors (left-handed):
+.vector anim_fire1_left;
+.vector anim_fire2_left;
+.vector anim_idle_left;
+.vector anim_reload_left;
 
 void() player_setupanimsformodel;
 void setanim(entity e, vector anim, float looping, float override, float restart);
@@ -257,6 +264,7 @@ enum {
     WR_TT_RESTORE,           // restore weapon-specific fields from tt_moment for time travel
     WR_LOWER,                // weapon is being switched from
     WR_SETCLIPCONTEXT,       // just don't touch this
+    WR_CLEAR,                // clear resources used by this weapon
 };
 
 void weapon_defaultspawnfunc(float wpn);
@@ -486,7 +494,8 @@ float next_pingtime;
         _VOICEMSG(ureshii) \
         _VOICEMSG(volevi) \
         _VOICEMSG(suino) \
-        _VOICEMSG(culo)
+        _VOICEMSG(culo) \
+        _VOICEMSG(exterminate)
 
 #define ALLVOICEMSGS \
 		_VOICEMSG(attack) \
@@ -827,13 +836,17 @@ var .float w_button_secondary;
 .float accstat_hits;
 
 .float w_secondary;
+.float w_secondary_picked;
 .float w_secondary_nextround;
+.float w_pickup_confirmation;
+.float w_pickup_confirmation_stat;
 
 .string netname_strzoned;
 
 .float w_inring_cycle;
 .float w_inring_fulltime;
 .float w_spread_indicator;
+.float w_spread_indicator2;
 
 .float pspec_flags;
 .float pspec_entertime;

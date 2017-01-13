@@ -612,69 +612,51 @@ void WallJumpPhysics(void) {
                 vlen(sidev) * CVAR(g_walljump_force_velocityscale)
         ));
         var wj_z_factor = CVAR(g_walljump_velocity_z_factor);
+		var kick_factor = 0;
 
-        if(CVAR(g_walljump_reflect)) {
-            kickdir = normalize(sidev);
+        if(CVAR(g_walljump_force_aimed)) {
+            makevectors(self.angles);
 
             // trailparticles(world, particleeffectnum("TE_TEI_G3RED"), self.origin - kickdir * wj_force, self.origin);
+            if (self.movement_x >= 0) {
+				if (self.movement_y == 0)
+					kickdir = v_forward;
+				else {
+					kickdir = v_right * (if (self.movement_y > 0) 1 else -1);
+					if (self.movement_x > 0)
+						kickdir = normalize(v_forward + kickdir);
+				}
+			} else {
+				kickdir = v_forward * -1;
+				if not(self.movement_y == 0)
+					kickdir = normalize(kickdir + v_right * (if (self.movement_y > 0) 1 else -1));
+			}
 
-            kickdir = kickdir - 2 * (kickdir * plane_normal) * plane_normal;
-
-            if(kickdir == '0 0 0') {
-                kickdir = plane_normal;
-            } else if(CVAR(g_walljump_reflect_minkickangle)) {
-                // XXX: This is stupid, lame, approximate and VERY inefficient.
-
-                var ma = CVAR(g_walljump_reflect_minkickangle);
-                var od = 180;
-                var i = 0;
-                var okick = kickdir;
-
-                while((var d = fabs(RAD2DEG * asin(kickdir * plane_normal) - ma)) > 0.1 && d < od) {
-                    od = d;
-                    okick = kickdir;
-                    kickdir = normalize(kickdir + plane_normal * 0.01);
-                    ++i;
-                }
-
-                kickdir = okick;
-            }
+			kick_factor = max(0, kickdir * plane_normal);
+            kickdir = kick_factor * kickdir;
 
             // trailparticles(world, particleeffectnum("TE_TEI_G3YELLOW"), self.origin, self.origin + kickdir * wj_force);
         } else {
             kickdir = plane_normal;
         }
 
-        if(CVAR(g_walljump_hardkick) == 1) {
-            self.velocity_x = kickdir_x * wj_force;
-            self.velocity_y = kickdir_y * wj_force;
-        } else {
-            var wj_xy_factor = CVAR(g_walljump_velocity_xy_factor);
-            var cap = CVAR(g_walljump_velocity_xy_cap);
+		var wj_xy_factor = CVAR(g_walljump_velocity_xy_factor);
+		if (wj_xy_factor)
+			wj_xy_factor = (1 / wj_xy_factor) * (1 - kick_factor);
 
-            if(cap)
-                cap = max(vlen(sidev) / wj_xy_factor, wj_force);
+		var cap = CVAR(g_walljump_velocity_xy_cap);
 
-            if(CVAR(g_walljump_velocity_xy_factor_initial_only)) {
-                self.velocity_x = (self.velocity_x / wj_xy_factor) + (kickdir_x * wj_force);
-                self.velocity_y = (self.velocity_y / wj_xy_factor) + (kickdir_y * wj_force);
-            } else {
-                self.velocity_x = (self.velocity_x + kickdir_x * wj_force) / wj_xy_factor;
-                self.velocity_y = (self.velocity_y + kickdir_y * wj_force) / wj_xy_factor;
-            }
+		if(cap)
+			cap = max(vlen(sidev) / wj_xy_factor, wj_force);
 
-            if(cap) {
-                self.velocity_z = 0;
-                if(vlen(self.velocity) > cap)
-                    self.velocity = normalize(self.velocity) * cap;
-            }
+		self.velocity_x = (self.velocity_x * wj_xy_factor) + (kickdir_x * wj_force);
+		self.velocity_y = (self.velocity_y * wj_xy_factor) + (kickdir_y * wj_force);
 
-            if((var hk = CVAR(g_walljump_hardkick))) {
-                var ihk = 1 - hk;
-                self.velocity_x = ihk * self.velocity_x + hk * kickdir_x * wj_force;
-                self.velocity_y = ihk * self.velocity_y + hk * kickdir_y * wj_force;
-            }
-        }
+		if(cap) {
+			self.velocity_z = 0;
+			if(vlen(self.velocity) > cap)
+				self.velocity = normalize(self.velocity) * cap;
+		}
 
         self.velocity_z = CVAR(sv_jumpvelocity) * wj_z_factor;
         if(self.crouch)
