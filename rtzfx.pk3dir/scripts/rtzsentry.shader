@@ -24,6 +24,20 @@ textures/rtzsentry_ball
     }
 } 
 
+sentry_ball_outer
+{
+    cull none
+    {
+        map textures/pryaxe_balls_outer.tga
+        tcMod rotate 41
+        tcMod scale 2.3 3.2
+        tcMod scroll 1.2 0.9
+        tcGen environment
+        blendfunc add
+        rgbGen identityLighting
+    }
+}
+
 textures/rtzsentry_fx1
 {
 	cull none
