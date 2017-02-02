@@ -468,7 +468,7 @@ HG_HOOKFUNCTION(sentry, Attack) {
     vector o = self.origin;
 
     entity e = spawn();
-    setmodel(e, "models/sentry.md3");
+    setmodel(e, "models/rtzsentry.iqm");
     setsize(e, HG_SENTRY_MINS, HG_SENTRT_MAXS);
     setorigin(e, o);
 

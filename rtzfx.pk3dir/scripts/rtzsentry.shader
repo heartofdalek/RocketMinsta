@@ -1,9 +1,18 @@
 textures/rtzsentry
 {
-    // surfaceparm nomipmaps
+    surfaceparm nomipmaps
     dpreflectcube cubemaps/rtzapper/reflect1 
     {
         map textures/rtzsentry.tga
+        rgbGen lightingDiffuse
+    }
+}
+
+textures/rtzsentry_core
+{
+    dpreflectcube cubemaps/rtzapper/reflect1
+    {
+		map textures/rtzsentry_core.tga
         rgbGen lightingDiffuse
     }
 }
@@ -23,20 +32,6 @@ textures/rtzsentry_ball
 		rgbGen identity
     }
 } 
-
-sentry_ball_outer
-{
-    cull none
-    {
-        map textures/pryaxe_balls_outer.tga
-        tcMod rotate 41
-        tcMod scale 2.3 3.2
-        tcMod scroll 1.2 0.9
-        tcGen environment
-        blendfunc add
-        rgbGen identityLighting
-    }
-}
 
 textures/rtzsentry_fx1
 {
@@ -81,3 +76,18 @@ textures/rtzsentry_fx4
         rgbGen identity
     }
 }
+
+sentry_ball_outer
+{
+    cull none
+    {
+        map textures/pryaxe_balls_outer.tga
+        tcMod rotate 41
+        tcMod scale 2.3 3.2
+        tcMod scroll 1.2 0.9
+        tcGen environment
+        blendfunc add
+        rgbGen identityLighting
+    }
+}  
+ 
