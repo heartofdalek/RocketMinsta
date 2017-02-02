@@ -61,7 +61,7 @@ void HG_Precache(void) {
     precache_sound(RM_SOUND_LASER_PRIMARY);
     precache_sound(RM_SOUND_LASER_SECONDARY);
     precache_model("models/ctf/shield.md3");
-    precache_model("models/rtzsentry.izm");
+    precache_model("models/rtzsentry.iqm");
 }
 
 void HG_SetContext(float isalt) {
