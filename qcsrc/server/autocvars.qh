@@ -1278,6 +1278,7 @@ float autocvar_g_nadgets_sentry_repairfactor_nadgets;
 float autocvar_g_nadgets_sentry_shock_damage;
 float autocvar_g_nadgets_sentry_shock_energy_cost;
 float autocvar_g_nadgets_sentry_shock_force;
+float autocvar_g_nadgets_sentry_levitation;
 float autocvar_g_nadgets_shield_adept_discharge_extend;
 float autocvar_g_nadgets_shield_adept_discharge_renew;
 float autocvar_g_nadgets_shield_adept_duration;

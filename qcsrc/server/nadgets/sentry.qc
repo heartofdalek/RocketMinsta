@@ -340,6 +340,10 @@ void HG_Sentry_Think(void) {
     self = o;
 
     self.nextthink = time;
+
+	if (CVAR(g_nadgets_sentry_levitation)) {
+		setorigin(self, self.spawnorigin + '0 0 16' * sin(time));
+	}
 }
 
 void HG_Sentry_Damage(entity inflictor, entity attacker, float damage, float deathtype, vector hitloc, vector force) {
@@ -478,11 +482,12 @@ HG_HOOKFUNCTION(sentry, Attack) {
         return HG_ATTACK_FAIL_COOLDOWN;
     }
 
+	e.spawnorigin = e.origin;
     e.classname = "hg_sentry";
     e.team = self.team;
     e.realowner = self; // can't use owner here because we want to be blocked by it
     e.solid = SOLID_BBOX;
-    e.movetype = MOVETYPE_TOSS;
+    e.movetype = if (CVAR(g_nadgets_sentry_levitation)) MOVETYPE_NONE else MOVETYPE_TOSS;
     e.angles = '0 360 0' * random();
     e.reset = HG_Sentry_Remove;
     e.think = HG_Sentry_Think;
