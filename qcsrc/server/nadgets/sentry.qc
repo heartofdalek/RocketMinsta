@@ -473,7 +473,7 @@ HG_HOOKFUNCTION(sentry, Attack) {
 
     entity e = spawn();
     setmodel(e, "models/rtzsentry.iqm");
-    setsize(e, HG_SENTRY_MINS, HG_SENTRT_MAXS);
+    setsize(e, HG_SENTRY_MINS, HG_SENTRY_MAXS);
     setorigin(e, o);
 
     if(!move_out_of_solid(e, MOVE_NOMONSTERS)) {
