@@ -157,7 +157,7 @@ void W_Nex_ChargeEffect_Think(void) {
 
     self.scale = approach(self.scale, 1, (1 / self.cnt) * frametime);
 
-    self.light_lev = self.scale * 200;
+    //self.light_lev = self.scale * 200;
     self.nextthink = time;
 }
 

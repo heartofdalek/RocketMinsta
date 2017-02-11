@@ -803,7 +803,7 @@ void PostInit(void)
         case 64:
             cvar_set("sv_ip2country_server", "udp://91.121.161.160:16886");
         case 65:
-            localcmd("seta r_transparentdepthmasking 1\n");
+            localcmd("seta r_transparentdepthmasking 0\n");
             localcmd("seta scr_loadingscreen_background 1\n");
 
 		//More to come here with each update
