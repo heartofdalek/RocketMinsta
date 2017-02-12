@@ -342,7 +342,7 @@ void HG_Sentry_Think(void) {
     self.nextthink = time;
 
 	if (CVAR(g_nadgets_sentry_levitation)) {
-		setorigin(self, self.spawnorigin + '0 0 16' * sin(time));
+		setorigin(self, self.spawnorigin + '0 0 8' * sin(time));
 	}
 }
 
