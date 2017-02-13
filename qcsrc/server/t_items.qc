@@ -1119,7 +1119,7 @@ void minstagib_items (float itemid)
 
 		//<akari>
 		if(CVAR(g_rocketminsta))
-			StartItem ("models/items/g_h50.md3",
+			StartItem (sv_model_healthlarge,
 				"misc/mediumhealth.wav", 45, 0,
 				"Nex Ammo", IT_CELLS, 0, 0, generic_pickupevalfunc, 100);
 		else
@@ -1161,7 +1161,7 @@ void minstagib_items (float itemid)
 		if (itemid == IT_NAILS)
 		{
 			self.max_health = 1;
-			StartItem ("models/items/g_h100.md3",
+			StartItem (sv_model_healthmega,
 				"misc/megahealth.wav", g_pickup_respawntime_powerup, g_pickup_respawntimejitter_powerup,
 				"Extralife", IT_NAILS, 0, FL_POWERUP, generic_pickupevalfunc, BOT_PICKUP_RATING_HIGH);
 
@@ -1310,7 +1310,7 @@ void weapon_defaultspawnfunc(float wpn)
 
 	if(wpn == WEP_MINSTANEX && CVAR(g_rocketminsta) && g_minstagib)
 	{
-		_model = "models/items/g_h50.md3";
+		_model = sv_model_healthlarge;
 		_sound = "misc/mediumhealth.wav";
 	}
 	else
@@ -1511,7 +1511,7 @@ void spawnfunc_item_health_small (void) {
 		self.max_health = g_pickup_healthsmall_max;
 	if(!self.health)
 		self.health = g_pickup_healthsmall;
-	StartItem ("models/items/g_h1.md3", "misc/minihealth.wav", g_pickup_respawntime_health_small, g_pickup_respawntimejitter_health_small, "5 Health", IT_5HP, 0, 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_LOW);
+	StartItem (sv_model_healthsmall, "misc/minihealth.wav", g_pickup_respawntime_health_small, g_pickup_respawntimejitter_health_small, "5 Health", IT_5HP, 0, 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_LOW);
 }
 
 void spawnfunc_item_health_medium (void) {
@@ -1519,7 +1519,7 @@ void spawnfunc_item_health_medium (void) {
 		self.max_health = g_pickup_healthmedium_max;
 	if(!self.health)
 		self.health = g_pickup_healthmedium;
-	StartItem ("models/items/g_h25.md3", "misc/mediumhealth.wav", g_pickup_respawntime_health_medium, g_pickup_respawntimejitter_health_medium, "25 Health", IT_25HP, 0, 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_MID);
+	StartItem (sv_model_healthmedium, "misc/mediumhealth.wav", g_pickup_respawntime_health_medium, g_pickup_respawntimejitter_health_medium, "25 Health", IT_25HP, 0, 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_MID);
 }
 
 void spawnfunc_item_health_large (void) {
@@ -1527,7 +1527,7 @@ void spawnfunc_item_health_large (void) {
 		self.max_health = g_pickup_healthlarge_max;
 	if(!self.health)
 		self.health = g_pickup_healthlarge;
-	StartItem ("models/items/g_h50.md3", "misc/mediumhealth.wav", g_pickup_respawntime_health_large, g_pickup_respawntimejitter_health_large, "50 Health", IT_25HP, 0, 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_MID);
+	StartItem (sv_model_healthlarge, "misc/mediumhealth.wav", g_pickup_respawntime_health_large, g_pickup_respawntimejitter_health_large, "50 Health", IT_25HP, 0, 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_MID);
 }
 
 void spawnfunc_item_health_mega (void) {
@@ -1544,7 +1544,7 @@ void spawnfunc_item_health_mega (void) {
 			self.max_health = g_pickup_healthmega_max;
 		if(!self.health)
 			self.health = g_pickup_healthmega;
-		StartItem ("models/items/g_h100.md3", "misc/megahealth.wav", g_pickup_respawntime_health_mega, g_pickup_respawntimejitter_health_mega, "100 Health", IT_HEALTH, 0, if(CVAR(g_pickup_healthmega_is_powerup)) FL_POWERUP else 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_HIGH);
+		StartItem (sv_model_healthmega, "misc/megahealth.wav", g_pickup_respawntime_health_mega, g_pickup_respawntimejitter_health_mega, "100 Health", IT_HEALTH, 0, if(CVAR(g_pickup_healthmega_is_powerup)) FL_POWERUP else 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_HIGH);
 	}
 }
 

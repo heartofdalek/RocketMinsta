@@ -1484,6 +1484,11 @@ float g_touchexplode_force;
 float sv_autotaunt;
 float sv_taunt;
 
+string sv_model_healthmega;
+string sv_model_healthlarge;
+string sv_model_healthmedium;
+string sv_model_healthsmall;
+
 void readlevelcvars(void)
 {
     g_bugrigs = CVAR(g_bugrigs);
@@ -1624,6 +1629,30 @@ void readlevelcvars(void)
         game_starttime                 = CVAR(g_start_delay);
 
     readplayerstartcvars();
+
+	sv_model_healthmega = cvar_string("sv_model_healthmega");
+	if (sv_model_healthmega == "")
+		sv_model_healthmega = "models/items/g_h100.md3";
+	else
+		sv_model_healthmega = strzone(sv_model_healthmega);
+
+	sv_model_healthlarge = cvar_string("sv_model_healthlarge");
+	if (sv_model_healthlarge == "")
+		sv_model_healthlarge = "models/items/g_h50.md3";
+	else
+		sv_model_healthlarge = strzone(sv_model_healthlarge);
+
+	sv_model_healthmedium = cvar_string("sv_model_healthmedium");
+	if (sv_model_healthmedium == "")
+		sv_model_healthmedium = "models/items/g_h25.md3";
+	else
+		sv_model_healthmedium = strzone(sv_model_healthmedium);
+
+	sv_model_healthsmall = cvar_string("sv_model_healthsmall");
+	if (sv_model_healthsmall == "")
+		sv_model_healthsmall = "models/items/g_h1.md3";
+	else
+		sv_model_healthsmall = strzone(sv_model_healthsmall);
 }
 
 string entityfieldtypestr(float fld) {
