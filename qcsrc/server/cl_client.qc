@@ -1,3 +1,5 @@
+string sv_player_hat;
+.entity hat;
 
 void Boobs_Clear();
 
@@ -1070,6 +1072,12 @@ void Boobs_ClearFor(entity plr, vector force) {
 	if(plr.boob_left)		Boobs_DropBoob(self.boob_left, force);
 	if(plr.boob_right)		Boobs_DropBoob(self.boob_right, force);
 	plr.boob_left = plr.boob_right = world;
+	if(plr.hat) {
+		plr.hat.nextthink = time + 10;
+		plr.hat.think = SUB_Remove;
+		Boobs_DropBoob(plr.hat, force);
+		plr.hat = world;
+	}
 }
 
 void Boobs_Clear() {
@@ -1132,11 +1140,28 @@ void Boobs_Attach() {
 	if(self.boob_left)	remove(self.boob_left);
 	if(self.boob_right)	remove(self.boob_right);
 	
-	if not(CVAR(g_boobs))
-		return;
-	
-	self.boob_left  = Boobs_SpawnBoob(self, -1);
-	self.boob_right = Boobs_SpawnBoob(self, +1);
+	if (CVAR(g_boobs)) {
+		self.boob_left  = Boobs_SpawnBoob(self, -1);
+		self.boob_right = Boobs_SpawnBoob(self, +1);
+	}
+	string s = CVAR(sv_player_hat);
+	if (s != "") {
+		if (sv_player_hat != s) {
+			if (sv_player_hat != "")
+				strunzone(sv_player_hat);
+
+			sv_player_hat = strzone(s);
+		}
+		if not(self.hat)
+			self.hat = spawn();
+
+		setmodel(self.hat, sv_player_hat);
+		self.hat.scale = CVAR(sv_player_hat_scale);
+		setattachment(self.hat, self, CVAR_STR(sv_player_hat_attachment));
+		self.hat.angles = CVAR_VEC(sv_player_hat_angles);
+		self.hat.owner = self;
+		setorigin(self.hat, CVAR_VEC(sv_player_hat_origin));
+	}
 }
 
 void Boobs_DropAllAndRespawn(vector force) {
