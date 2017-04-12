@@ -1748,6 +1748,7 @@ float autocvar_sv_pogostick;
 string autocvar_sv_player_hat;
 vector autocvar_sv_player_hat_angles;
 string autocvar_sv_player_hat_attachment;
+float autocvar_sv_player_hat_drop_lifetime;
 vector autocvar_sv_player_hat_origin;
 float autocvar_sv_player_hat_scale;
 float autocvar_sv_precacheplayermodels;

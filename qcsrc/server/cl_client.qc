@@ -1073,8 +1073,8 @@ void Boobs_ClearFor(entity plr, vector force) {
 	if(plr.boob_right)		Boobs_DropBoob(self.boob_right, force);
 	plr.boob_left = plr.boob_right = world;
 	if(plr.hat) {
-		plr.hat.nextthink = time + 10;
-		plr.hat.think = SUB_Remove;
+		plr.hat.nextthink = time + CVAR(sv_player_hat_drop_lifetime);
+		plr.hat.think = plr.hat.reset = SUB_Remove;
 		Boobs_DropBoob(plr.hat, force);
 		plr.hat = world;
 	}
