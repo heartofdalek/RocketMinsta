@@ -1986,6 +1986,8 @@ void precache()
 #endif
 
 	precache_model("models/boob.mdl");
+	if (CVAR(sv_player_hat) != "")
+		precache_model(CVAR(sv_player_hat));
 
     // Precache all player models if desired
     if (CVAR(sv_precacheplayermodels))
