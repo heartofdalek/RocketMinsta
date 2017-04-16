@@ -1488,6 +1488,10 @@ string sv_model_healthmega;
 string sv_model_healthlarge;
 string sv_model_healthmedium;
 string sv_model_healthsmall;
+string sv_model_armorlarge;
+string sv_model_armorbig;
+string sv_model_armormedium;
+string sv_model_armorsmall;
 
 void readlevelcvars(void)
 {
@@ -1630,29 +1634,16 @@ void readlevelcvars(void)
 
     readplayerstartcvars();
 
-	sv_model_healthmega = cvar_string("sv_model_healthmega");
-	if (sv_model_healthmega == "")
-		sv_model_healthmega = "models/items/g_h100.md3";
-	else
-		sv_model_healthmega = strzone(sv_model_healthmega);
-
-	sv_model_healthlarge = cvar_string("sv_model_healthlarge");
-	if (sv_model_healthlarge == "")
-		sv_model_healthlarge = "models/items/g_h50.md3";
-	else
-		sv_model_healthlarge = strzone(sv_model_healthlarge);
-
-	sv_model_healthmedium = cvar_string("sv_model_healthmedium");
-	if (sv_model_healthmedium == "")
-		sv_model_healthmedium = "models/items/g_h25.md3";
-	else
-		sv_model_healthmedium = strzone(sv_model_healthmedium);
-
-	sv_model_healthsmall = cvar_string("sv_model_healthsmall");
-	if (sv_model_healthsmall == "")
-		sv_model_healthsmall = "models/items/g_h1.md3";
-	else
-		sv_model_healthsmall = strzone(sv_model_healthsmall);
+#define SET_ITEM_MODEL(x,y)  x = (if ((x = cvar_string(#x)) == "") y else strzone(x));
+	SET_ITEM_MODEL(sv_model_healthmega, "models/items/g_h100.md3")
+	SET_ITEM_MODEL(sv_model_healthlarge, "models/items/g_h50.md3")
+	SET_ITEM_MODEL(sv_model_healthmedium, "models/items/g_h25.md3")
+	SET_ITEM_MODEL(sv_model_healthsmall, "models/items/g_h1.md3")
+	SET_ITEM_MODEL(sv_model_armorlarge, "models/items/g_a25.md3")
+	SET_ITEM_MODEL(sv_model_armorbig, "models/items/g_a50.md3")
+	SET_ITEM_MODEL(sv_model_armormedium, "models/items/g_armormedium.md3")
+	SET_ITEM_MODEL(sv_model_armorsmall, "models/items/g_a1.md3")
+#undef SET_ITEM_MODEL
 }
 
 string entityfieldtypestr(float fld) {

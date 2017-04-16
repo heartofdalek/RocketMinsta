@@ -1479,7 +1479,7 @@ void spawnfunc_item_armor_small (void) {
 		self.armorvalue = g_pickup_armorsmall;
 	if(!self.max_armorvalue)
 		self.max_armorvalue = g_pickup_armorsmall_max;
-	StartItem ("models/items/g_a1.md3", "misc/armor1.wav", g_pickup_respawntime_armor_small, g_pickup_respawntimejitter_armor_small, "5 Armor", IT_ARMOR_SHARD, 0, 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_LOW);
+	StartItem (sv_model_armorsmall, "misc/armor1.wav", g_pickup_respawntime_armor_small, g_pickup_respawntimejitter_armor_small, "5 Armor", IT_ARMOR_SHARD, 0, 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_LOW);
 }
 
 void spawnfunc_item_armor_medium (void) {
@@ -1487,7 +1487,7 @@ void spawnfunc_item_armor_medium (void) {
 		self.armorvalue = g_pickup_armormedium;
 	if(!self.max_armorvalue)
 		self.max_armorvalue = g_pickup_armormedium_max;
-	StartItem ("models/items/g_armormedium.md3", "misc/armor10.wav", g_pickup_respawntime_armor_medium, g_pickup_respawntimejitter_armor_medium, "25 Armor", IT_ARMOR, 0, 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_MID);
+	StartItem (sv_model_armormedium, "misc/armor10.wav", g_pickup_respawntime_armor_medium, g_pickup_respawntimejitter_armor_medium, "25 Armor", IT_ARMOR, 0, 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_MID);
 }
 
 void spawnfunc_item_armor_big (void) {
@@ -1495,7 +1495,7 @@ void spawnfunc_item_armor_big (void) {
 		self.armorvalue = g_pickup_armorbig;
 	if(!self.max_armorvalue)
 		self.max_armorvalue = g_pickup_armorbig_max;
-	StartItem ("models/items/g_a50.md3", "misc/armor17_5.wav", g_pickup_respawntime_armor_big, g_pickup_respawntimejitter_armor_big, "50 Armor", IT_ARMOR, 0, 0, commodity_pickupevalfunc, 20000);
+	StartItem (sv_model_armorbig, "misc/armor17_5.wav", g_pickup_respawntime_armor_big, g_pickup_respawntimejitter_armor_big, "50 Armor", IT_ARMOR, 0, 0, commodity_pickupevalfunc, 20000);
 }
 
 void spawnfunc_item_armor_large (void) {
@@ -1503,7 +1503,7 @@ void spawnfunc_item_armor_large (void) {
 		self.armorvalue = g_pickup_armorlarge;
 	if(!self.max_armorvalue)
 		self.max_armorvalue = g_pickup_armorlarge_max;
-	StartItem ("models/items/g_a25.md3", "misc/armor25.wav", g_pickup_respawntime_armor_large, g_pickup_respawntimejitter_armor_large, "100 Armor", IT_ARMOR, 0, if(CVAR(g_pickup_armorlarge_is_powerup)) FL_POWERUP else 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_HIGH);
+	StartItem (sv_model_armorlarge, "misc/armor25.wav", g_pickup_respawntime_armor_large, g_pickup_respawntimejitter_armor_large, "100 Armor", IT_ARMOR, 0, if(CVAR(g_pickup_armorlarge_is_powerup)) FL_POWERUP else 0, commodity_pickupevalfunc, BOT_PICKUP_RATING_HIGH);
 }
 
 void spawnfunc_item_health_small (void) {
