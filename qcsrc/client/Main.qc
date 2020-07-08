@@ -625,10 +625,7 @@ void RemoveDuplicateMasterServers(void) {
 
 void RegisterMasterServers(void) {
     RemoveDuplicateMasterServers();
-    AddMasterServer("nex.thebadasschoobs.org",  "91.121.161.160");  // Nude Dudes master server
     AddMasterServer("dpmaster.deathmask.net",   "107.161.23.68");   // dpmaster.deathmask.net
-    AddMasterServer("dpmaster.vecxis.com",      "162.243.128.63");  // Vecxis master server
-    AddMasterServer("ghdigital.com",            "207.55.114.154");  // LordHavoc's master server
     AddMasterServer("dpmaster.tchr.no",         "92.62.40.73");     // tChr's master server
 }
 
